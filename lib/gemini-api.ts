@@ -19,7 +19,7 @@ interface Movie {
   streamingPlatforms: string[]
 }
 
-export async function getMovieSuggestions(emotions: EmotionData): Promise<Movie[]> {
+export async function getMovieSuggestions(emotions: EmotionData, language: string = 'en'): Promise<Movie[]> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     console.error('Gemini API: API key not configured')
@@ -38,36 +38,39 @@ export async function getMovieSuggestions(emotions: EmotionData): Promise<Movie[
 
   console.log('Gemini API: Dominant emotions:', dominantEmotions)
 
-  const prompt = `You are CineMood, an expert film curator with deep knowledge of cinema across all genres, cultures, and eras. Your mission is to recommend the perfect movies based on this emotional analysis: ${dominantEmotions}
+  const languageInstructions = language === 'en' ? '' : `
+Important: Provide all text content (descriptions and match reasons) in ${language === 'fr' ? 'French' : 'Spanish'}. Keep movie titles in their original form.`
 
-Role: Act as a thoughtful film therapist who understands how movies can resonate with and help process different emotional states.
+  const prompt = `You are CineMood, an expert film curator with deep knowledge of cinema across all genres, cultures, and eras. Your mission is to recommend the perfect movies based on this emotional analysis: ${dominantEmotions}${languageInstructions}
 
-Task: Recommend 3 carefully curated films that will create a meaningful viewing experience based on the detected emotions.
+Role: Act as a thoughtful film curator who understands how movies can resonate with and help process different emotional states.
+
+Task: Recommend EXACTLY 3 DIFFERENT movies that will create a meaningful viewing experience based on the detected emotions. Each movie MUST BE UNIQUE - no duplicates allowed.
 
 Consider these advanced criteria:
-1. Emotional Resonance:
+1. Movie Quality & Relevance:
+   - Focus on highly-rated films (IMDb rating 7+ or significant critical acclaim)
+   - Include at least one movie from the last 5 years
+   - Mix of mainstream hits and hidden gems
+   - No obscure or hard-to-find films
+
+2. Emotional Resonance:
    - How the film's themes and tone align with or complement the viewer's emotional state
    - The potential therapeutic or cathartic value of the story
    - The emotional journey the film takes the viewer on
 
-2. Cinematic Diversity:
-   - Mix of genres to provide different perspectives
-   - Balance between mainstream and independent films
-   - Variety in pacing and storytelling styles
-   - Cultural diversity in storytelling
+3. Diversity in Selection:
+   - Each movie MUST be from a different genre
+   - Mix of different cultures and perspectives
+   - Variety in storytelling styles
+   - Balance between lighter and deeper content
 
-3. Viewer Experience:
-   - Films that encourage emotional processing
-   - Stories that offer hope, insight, or understanding
-   - Movies that feel like a genuine emotional companion
+4. Accessibility:
+   - Movies should be available on major streaming platforms
+   - Focus on films with wide release or strong streaming presence
+   - Avoid region-locked or limited-release films
 
-4. Technical Excellence:
-   - Strong character development
-   - Compelling visual storytelling
-   - Memorable performances
-   - High production quality
-
-CRITICAL: Respond ONLY with a JSON array of exactly 3 movie objects. Each object must have:
+CRITICAL: Respond ONLY with a JSON array of EXACTLY 3 DIFFERENT movie objects. Each object must have:
 {
   "title": "Exact movie title - e.g., 'Inside Out'",
   "description": "A vivid, engaging plot summary that captures the essence of the film (2-3 sentences)",

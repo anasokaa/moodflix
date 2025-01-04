@@ -45,98 +45,116 @@ export const translations = {
       letMeSeeYourSmile: "Let Me See Your Smile! 📸",
       captureTheMoment: "Capture the Magic! ✨",
       tryAgain: "Let's Try Again! 🔄"
+    },
+    language: {
+      select: "Select Language",
+      en: "English",
+      fr: "Français",
+      es: "Español"
     }
   },
   fr: {
     welcome: {
       title: "MoodFlix",
-      subtitle: "Votre Magicien de Films! ✨",
+      subtitle: "Votre Magicien du Cinéma! ✨",
       description: "Transformons votre humeur en magie cinématographique! 🎬 Prenez un selfie et trouvez votre film parfait.",
       features: {
         express: "Montrez-nous votre beau visage! 📸",
-        picks: "Des films selon votre humeur 🎯",
-        discover: "Découvrez des pépites cachées 💎"
+        picks: "Des films qui correspondent à votre humeur 🎯",
+        discover: "Découvrez des pépites cinématographiques 💎"
       },
       start: "C'est Parti! 🎬"
     },
     loading: {
       analyzing: "Lecture de vos vibrations... 🔮",
-      regenerating: "Préparation de nouvelle magie cinéma! ✨"
+      regenerating: "Préparation de nouvelles suggestions magiques! ✨"
     },
     movies: {
-      title: "Vos Films Parfaits! 🍿",
-      subtitle: "Selon votre humeur actuelle",
-      generateMore: "Plus de Magie Ciné! ✨",
+      title: "Vos Films Correspondants! 🍿",
+      subtitle: "Basé sur votre humeur actuelle",
+      generateMore: "Plus de Magie Cinéma! ✨",
       watchOn: "Regarder sur",
       matchReason: "Pourquoi ce film?",
-      noMovies: "Oups! Réessayons avec une meilleure photo! 📸",
-      error: "Petit souci magique! On réessaie! 🎬"
+      noMovies: "Oups! Réessayons avec une photo plus claire! 📸",
+      error: "Petit problème magique! Réessayons! 🎬"
     },
     emotions: {
-      anger: "En Feu",
-      disgust: "Pas Convaincu",
+      anger: "En Colère",
+      disgust: "Pas Impressionné",
       fear: "Effrayé",
       happiness: "Joyeux",
       neutral: "Détendu",
       sadness: "Mélancolique",
-      surprise: "Émerveillé"
+      surprise: "Étonné"
     },
     buttons: {
-      tryAgain: "Nouvelle Humeur? Go! 🎭",
-      generateMore: "Plus de Films! 🎬",
-      startCamera: "Selfie Time! 📸",
-      capture: "Capturez l'Instant! ✨"
+      tryAgain: "Nouvelle Humeur? Allons-y! 🎭",
+      generateMore: "Plus de Films SVP! 🎬",
+      startCamera: "Prenez un Selfie! 📸",
+      capture: "Capturez le Moment! ✨"
     },
     camera: {
       letMeSeeYourSmile: "Montrez-moi Votre Sourire! 📸",
       captureTheMoment: "Capturez la Magie! ✨",
       tryAgain: "Réessayons! 🔄"
+    },
+    language: {
+      select: "Choisir la Langue",
+      en: "English",
+      fr: "Français",
+      es: "Español"
     }
   },
   es: {
     welcome: {
       title: "MoodFlix",
-      subtitle: "¡Tu Mago de Películas! ✨",
+      subtitle: "¡Tu Mago del Cine! ✨",
       description: "¡Convirtamos tu estado de ánimo en magia cinematográfica! 🎬 Toma un selfie y encuentra tu película perfecta.",
       features: {
-        express: "¡Muéstranos tu hermosa cara! 📸",
-        picks: "Películas según tu humor 🎯",
-        discover: "Descubre joyas ocultas 💎"
+        express: "¡Muéstranos tu hermoso rostro! 📸",
+        picks: "Películas que coinciden con tu humor 🎯",
+        discover: "Descubre joyas cinematográficas 💎"
       },
-      start: "¡Vamos! 🎬"
+      start: "¡Comenzemos! 🎬"
     },
     loading: {
       analyzing: "Leyendo tus vibraciones... 🔮",
-      regenerating: "¡Preparando nueva magia de cine! ✨"
+      regenerating: "¡Preparando nueva magia cinematográfica! ✨"
     },
     movies: {
-      title: "¡Tus Películas Perfectas! 🍿",
-      subtitle: "Basado en tu humor actual",
+      title: "¡Tus Películas Coincidentes! 🍿",
+      subtitle: "Basado en tu estado de ánimo actual",
       generateMore: "¡Más Magia de Cine! ✨",
       watchOn: "Ver en",
       matchReason: "¿Por qué esta película?",
-      noMovies: "¡Ups! ¡Intentemos con una mejor foto! 📸",
+      noMovies: "¡Ups! ¡Intentemos de nuevo con una foto más clara! 📸",
       error: "¡Pequeño problema mágico! ¡Intentemos de nuevo! 🎬"
     },
     emotions: {
-      anger: "Encendido",
-      disgust: "No Convencido",
+      anger: "Enojado",
+      disgust: "No Impresionado",
       fear: "Asustado",
       happiness: "Feliz",
       neutral: "Relajado",
       sadness: "Melancólico",
-      surprise: "Maravillado"
+      surprise: "Asombrado"
     },
     buttons: {
-      tryAgain: "¿Nuevo Humor? ¡Vamos! 🎭",
-      generateMore: "¡Más Películas! 🎬",
-      startCamera: "¡Hora del Selfie! 📸",
+      tryAgain: "¿Nuevo Estado de Ánimo? ¡Vamos! 🎭",
+      generateMore: "¡Más Películas Por Favor! 🎬",
+      startCamera: "¡Toma un Selfie! 📸",
       capture: "¡Captura el Momento! ✨"
     },
     camera: {
       letMeSeeYourSmile: "¡Muéstrame Tu Sonrisa! 📸",
       captureTheMoment: "¡Captura la Magia! ✨",
-      tryAgain: "¡Intentémoslo de Nuevo! 🔄"
+      tryAgain: "¡Intentemos de Nuevo! 🔄"
+    },
+    language: {
+      select: "Seleccionar Idioma",
+      en: "English",
+      fr: "Français",
+      es: "Español"
     }
   }
 } 

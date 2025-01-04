@@ -158,8 +158,8 @@ export function Camera({ onCapture }: CameraProps) {
   }, [onCapture, stopStream])
 
   return (
-    <div className="relative w-full max-w-2xl mx-auto">
-      <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
+    <div className="relative w-full max-w-lg md:max-w-2xl mx-auto px-4">
+      <div className="relative aspect-[4/3] md:aspect-video rounded-lg overflow-hidden bg-muted">
         <video
           ref={videoRef}
           className="w-full h-full object-cover"
@@ -171,7 +171,7 @@ export function Camera({ onCapture }: CameraProps) {
         {isStreaming && !isCountingDown && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <motion.div
-              className="w-48 h-48 rounded-full border-2 border-primary/50 border-dashed"
+              className="w-36 h-36 md:w-48 md:h-48 rounded-full border-2 border-primary/50 border-dashed"
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ duration: 0.5 }}
@@ -190,7 +190,7 @@ export function Camera({ onCapture }: CameraProps) {
             >
               <motion.div
                 key={countdown}
-                className="text-6xl font-bold text-white"
+                className="text-4xl md:text-6xl font-bold text-white"
                 initial={{ scale: 2, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0, opacity: 0 }}
@@ -203,10 +203,10 @@ export function Camera({ onCapture }: CameraProps) {
         
         <div className="absolute inset-0 flex items-center justify-center">
           {error ? (
-            <div className="text-center p-6 bg-background/80 backdrop-blur-sm rounded-lg max-w-md">
-              <p className="text-destructive mb-4">{error}</p>
-              <Button onClick={startCamera} variant="secondary" size="lg" className="gap-2">
-                <RefreshCw className="w-5 h-5" />
+            <div className="text-center p-4 md:p-6 bg-background/80 backdrop-blur-sm rounded-lg max-w-[280px] md:max-w-md mx-4">
+              <p className="text-sm md:text-base text-destructive mb-4">{error}</p>
+              <Button onClick={startCamera} variant="secondary" size="lg" className="gap-2 text-sm md:text-base px-4 py-2 h-auto">
+                <RefreshCw className="w-4 h-4 md:w-5 md:h-5" />
                 {t('camera.tryAgain')}
               </Button>
             </div>
@@ -214,9 +214,9 @@ export function Camera({ onCapture }: CameraProps) {
             <Button 
               onClick={startCamera} 
               size="lg"
-              className="text-lg gap-2 bg-primary/90 hover:bg-primary/100 shadow-lg"
+              className="text-sm md:text-lg gap-2 bg-primary/90 hover:bg-primary/100 shadow-lg px-4 md:px-6 py-2 md:py-3 h-auto"
             >
-              <CameraIcon className="w-6 h-6" />
+              <CameraIcon className="w-5 h-5 md:w-6 md:h-6" />
               {t('camera.letMeSeeYourSmile')}
             </Button>
           ) : (
@@ -230,10 +230,10 @@ export function Camera({ onCapture }: CameraProps) {
                   onClick={captureImage}
                   size="lg"
                   variant="secondary"
-                  className="text-lg gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90 shadow-lg"
+                  className="text-sm md:text-lg gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90 shadow-lg px-4 md:px-6 py-2 md:py-3 h-auto"
                   disabled={isCountingDown}
                 >
-                  <Aperture className="w-6 h-6" />
+                  <Aperture className="w-5 h-5 md:w-6 md:h-6" />
                   {t('camera.captureTheMoment')}
                 </Button>
               </motion.div>

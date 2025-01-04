@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { LanguageSelector } from '@/components/language-selector'
 
 interface Movie {
   title: string
@@ -35,7 +36,7 @@ interface ClientPageProps {
 }
 
 export default function ClientPage({ onBack }: ClientPageProps) {
-  const { t } = useLanguage()
+  const { t, currentLanguage } = useLanguage()
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [showConfetti, setShowConfetti] = useState(false)
   const [movies, setMovies] = useState<Movie[]>([])
@@ -55,7 +56,10 @@ export default function ClientPage({ onBack }: ClientPageProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ image: imageData }),
+        body: JSON.stringify({ 
+          image: imageData,
+          language: currentLanguage
+        }),
       })
 
       console.log('API Response Status:', response.status)
@@ -95,7 +99,12 @@ export default function ClientPage({ onBack }: ClientPageProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ emotions })
+        body: JSON.stringify({ 
+          image: 'regenerate',
+          emotions,
+          previousMovies: movies.map(m => m.title),
+          language: currentLanguage
+        })
       })
 
       const result = await response.json()
@@ -136,6 +145,7 @@ export default function ClientPage({ onBack }: ClientPageProps) {
         </Button>
 
         <ThemeToggle />
+        <LanguageSelector />
 
         <Confetti trigger={showConfetti} />
 

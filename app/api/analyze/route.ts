@@ -5,62 +5,39 @@ import { getMovieSuggestions as getOmdbSuggestions } from '@/lib/omdb-api'
 
 export async function POST(request: Request) {
   try {
-    // Verify environment variables
-    const envCheck = {
-      FACE_API_KEY: !!process.env.FACE_API_KEY,
-      FACE_API_SECRET: !!process.env.FACE_API_SECRET,
-      OMDB_API_KEY: !!process.env.OMDB_API_KEY,
-      GEMINI_API_KEY: !!process.env.GEMINI_API_KEY
-    }
-    
-    console.log('API: Environment variables check:', envCheck)
-    
-    if (!envCheck.FACE_API_KEY || !envCheck.FACE_API_SECRET || 
-        !envCheck.OMDB_API_KEY || !envCheck.GEMINI_API_KEY) {
-      console.error('API: Missing environment variables:', 
-        Object.entries(envCheck)
-          .filter(([_, value]) => !value)
-          .map(([key]) => key)
-      )
-      return NextResponse.json(
-        { error: 'Server configuration error. Please contact support.' },
-        { status: 500 }
-      )
-    }
-
-    console.log('API: Received request')
     const body = await request.json()
-    console.log('API: Request body type:', typeof body)
-    console.log('API: Request body keys:', Object.keys(body))
-    
-    let emotions
+    console.log('API: Received request body:', body)
 
-    if (body.emotions) {
-      console.log('API: Using provided emotions:', body.emotions)
+    let emotions
+    if (body.image === 'regenerate') {
+      console.log('API: Processing regeneration request')
       emotions = body.emotions
-    } else if (body.image) {
-      console.log('API: Analyzing face from image data')
-      console.log('API: Image data length:', body.image.length)
-      
-      const faceAnalysis = await analyzeFace(body.image)
-      console.log('API: Face analysis result:', faceAnalysis)
-      
-      if (!faceAnalysis) {
-        console.log('API: No face detected')
+      if (!emotions) {
         return NextResponse.json(
-          { error: 'No face detected. Please try again with a clearer photo.' },
+          { error: 'No emotions provided for regeneration' },
+          { status: 400 }
+        )
+      }
+    } else {
+      // Process new image analysis
+      if (!body.image || !body.image.startsWith('data:image')) {
+        return NextResponse.json(
+          { error: 'Invalid image data' },
           { status: 400 }
         )
       }
 
-      console.log('API: Face analysis successful')
+      console.log('API: Analyzing face...')
+      const faceAnalysis = await analyzeFace(body.image)
+      
+      if (!faceAnalysis) {
+        return NextResponse.json(
+          { error: 'No face detected in the image' },
+          { status: 400 }
+        )
+      }
+
       emotions = faceAnalysis.emotion
-    } else {
-      console.log('API: No image or emotions provided')
-      return NextResponse.json(
-        { error: 'Please provide a photo to analyze.' },
-        { status: 400 }
-      )
     }
 
     console.log('API: Getting movie suggestions for emotions:', emotions)
@@ -68,13 +45,21 @@ export async function POST(request: Request) {
     try {
       // Try Gemini API first
       console.log('API: Attempting to get suggestions from Gemini...')
-      const geminiMovies = await getGeminiSuggestions(emotions)
+      const geminiMovies = await getGeminiSuggestions(emotions, body.language || 'en')
       console.log('API: Gemini suggestions:', geminiMovies)
       
-      if (geminiMovies && geminiMovies.length >= 3) {
+      // Filter out any previously suggested movies if this is a regeneration request
+      let filteredMovies = geminiMovies
+      if (body.previousMovies && Array.isArray(body.previousMovies)) {
+        filteredMovies = geminiMovies.filter(
+          movie => !body.previousMovies.includes(movie.title)
+        )
+      }
+      
+      if (filteredMovies && filteredMovies.length >= 3) {
         console.log('API: Successfully got suggestions from Gemini')
         return NextResponse.json({
-          movies: geminiMovies.slice(0, 3),
+          movies: filteredMovies.slice(0, 3),
           emotion: emotions
         })
       }
@@ -89,7 +74,15 @@ export async function POST(request: Request) {
     const omdbMovies = await getOmdbSuggestions(emotions)
     console.log('API: OMDB suggestions:', omdbMovies)
 
-    if (!omdbMovies || omdbMovies.length === 0) {
+    // Filter out any previously suggested movies if this is a regeneration request
+    let filteredOmdbMovies = omdbMovies
+    if (body.previousMovies && Array.isArray(body.previousMovies)) {
+      filteredOmdbMovies = omdbMovies.filter(
+        movie => !body.previousMovies.includes(movie.title)
+      )
+    }
+
+    if (!filteredOmdbMovies || filteredOmdbMovies.length === 0) {
       console.log('API: No movie suggestions found from either source')
       return NextResponse.json(
         { error: 'Could not find movie suggestions. Please try again.' },
@@ -97,21 +90,15 @@ export async function POST(request: Request) {
       )
     }
 
-    const response = {
-      movies: omdbMovies.slice(0, 3),
+    return NextResponse.json({
+      movies: filteredOmdbMovies.slice(0, 3),
       emotion: emotions
-    }
-    console.log('API: Sending response:', response)
-    return NextResponse.json(response)
+    })
+
   } catch (error) {
-    console.error('API Error:', error)
-    console.error('API Error details:', error instanceof Error ? error.stack : 'Unknown error')
+    console.error('API error:', error)
     return NextResponse.json(
-      { 
-        error: error instanceof Error 
-          ? error.message 
-          : 'Something went wrong. Please try again.'
-      },
+      { error: 'An error occurred while processing your request' },
       { status: 500 }
     )
   }

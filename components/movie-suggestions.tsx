@@ -88,7 +88,7 @@ export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: Mo
 
   return (
     <motion.div 
-      className="space-y-8 px-4 max-w-7xl mx-auto"
+      className="space-y-6 md:space-y-8 p-4 max-w-7xl mx-auto"
       variants={container}
       initial="hidden"
       animate="show"
@@ -96,20 +96,20 @@ export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: Mo
       {/* Emotions Display */}
       {significantEmotions && Object.keys(significantEmotions).length > 0 && (
         <motion.div 
-          className="grid gap-4 p-6 bg-card rounded-lg shadow-lg backdrop-blur-sm border"
+          className="grid gap-3 md:gap-4 p-4 md:p-6 bg-card rounded-lg shadow-lg backdrop-blur-sm border"
           variants={item}
         >
-          <h2 className="text-2xl font-bold text-center mb-2">{t('movies.subtitle')}</h2>
-          <div className="grid gap-4">
+          <h2 className="text-xl md:text-2xl font-bold text-center mb-2">{t('movies.subtitle')}</h2>
+          <div className="grid gap-3 md:gap-4">
             {Object.entries(significantEmotions).map(([emotion, value]) => (
-              <div key={emotion} className="space-y-2">
+              <div key={emotion} className="space-y-1.5 md:space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="font-medium">{t(`emotions.${emotion}`)}</span>
-                  <span className="text-sm text-muted-foreground">
+                  <span className="text-sm md:text-base font-medium">{t(`emotions.${emotion}`)}</span>
+                  <span className="text-xs md:text-sm text-muted-foreground">
                     {Math.round(value * 100)}%
                   </span>
                 </div>
-                <Progress value={value * 100} className="h-2" />
+                <Progress value={value * 100} className="h-1.5 md:h-2" />
               </div>
             ))}
           </div>
@@ -118,7 +118,7 @@ export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: Mo
 
       {/* Movies Grid */}
       <motion.div 
-        className="grid gap-6 md:grid-cols-3"
+        className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
         variants={item}
       >
         {movies.map((movie, index) => (
@@ -135,23 +135,23 @@ export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: Mo
                   alt={movie.title}
                   fill
                   className="object-cover transition-transform group-hover:scale-105"
-                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
                 />
               </div>
-              <div className="p-4 space-y-4">
-                <h3 className="text-xl font-bold leading-tight">{movie.title}</h3>
-                <p className="text-sm text-muted-foreground line-clamp-3">
+              <div className="p-3 md:p-4 space-y-3 md:space-y-4">
+                <h3 className="text-lg md:text-xl font-bold leading-tight">{movie.title}</h3>
+                <p className="text-xs md:text-sm text-muted-foreground line-clamp-3">
                   {movie.description}
                 </p>
                 <div className="space-y-2">
-                  <p className="text-sm font-medium text-primary">
+                  <p className="text-xs md:text-sm font-medium text-primary">
                     {movie.matchReason}
                   </p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5 md:gap-2">
                     {movie.streamingPlatforms.map(platform => (
                       <span
                         key={platform}
-                        className={`px-2 py-1 text-xs rounded-full text-white ${
+                        className={`px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs rounded-full text-white ${
                           platformColors[platform] || 'bg-gray-600'
                         }`}
                       >
@@ -168,13 +168,13 @@ export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: Mo
 
       {/* Generate More Button */}
       <motion.div 
-        className="flex justify-center pt-4"
+        className="flex justify-center pt-2 md:pt-4"
         variants={item}
       >
         <Button
           onClick={onGenerateMore}
           size="lg"
-          className="gap-2 bg-primary/90 hover:bg-primary/100 shadow-lg"
+          className="text-sm md:text-base gap-2 bg-primary/90 hover:bg-primary/100 shadow-lg px-4 md:px-6 py-2 md:py-3 h-auto"
         >
           {t('movies.generateMore')}
         </Button>

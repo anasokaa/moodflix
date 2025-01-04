@@ -44,11 +44,11 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
       variants={container}
       initial="hidden"
       animate="show"
-      className="flex flex-col items-center justify-center min-h-screen space-y-12 px-4 text-center"
+      className="flex flex-col items-center justify-center min-h-screen space-y-8 md:space-y-12 p-4 md:p-6 text-center"
     >
       {/* Logo and Title */}
       <motion.div 
-        className="relative space-y-4"
+        className="relative space-y-3 md:space-y-4"
         variants={item}
       >
         <motion.div
@@ -60,7 +60,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           transition={{ duration: 0.3 }}
         />
         <motion.h1
-          className="text-5xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent relative"
+          className="text-3xl md:text-5xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent relative"
           onHoverStart={() => setIsHovered(true)}
           onHoverEnd={() => setIsHovered(false)}
           whileHover={{ scale: 1.05 }}
@@ -68,7 +68,7 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
           {t('welcome.title')}
         </motion.h1>
         <motion.p
-          className="text-xl text-muted-foreground"
+          className="text-lg md:text-xl text-muted-foreground"
           variants={item}
         >
           {t('welcome.subtitle')}
@@ -77,46 +77,46 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
 
       {/* Features */}
       <motion.div 
-        className="grid gap-6 md:grid-cols-3 max-w-3xl"
+        className="grid gap-4 md:gap-6 grid-cols-1 md:grid-cols-3 max-w-3xl w-full px-4"
         variants={container}
       >
         <motion.div
-          className="p-6 rounded-lg bg-card/50 backdrop-blur-sm border shadow-lg"
+          className="p-4 md:p-6 rounded-lg bg-card/50 backdrop-blur-sm border shadow-lg"
           variants={item}
           whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.1)' }}
         >
           <motion.div animate={floatAnimation}>
-            <Camera className="w-8 h-8 mb-4 text-pink-500" />
+            <Camera className="w-6 h-6 md:w-8 md:h-8 mb-3 md:mb-4 text-pink-500" />
           </motion.div>
-          <h3 className="font-semibold mb-2">{t('welcome.features.express')}</h3>
+          <h3 className="text-sm md:text-base font-semibold mb-2">{t('welcome.features.express')}</h3>
         </motion.div>
 
         <motion.div
-          className="p-6 rounded-lg bg-card/50 backdrop-blur-sm border shadow-lg"
+          className="p-4 md:p-6 rounded-lg bg-card/50 backdrop-blur-sm border shadow-lg"
           variants={item}
           whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.1)' }}
         >
           <motion.div animate={floatAnimation}>
-            <Film className="w-8 h-8 mb-4 text-purple-500" />
+            <Film className="w-6 h-6 md:w-8 md:h-8 mb-3 md:mb-4 text-purple-500" />
           </motion.div>
-          <h3 className="font-semibold mb-2">{t('welcome.features.picks')}</h3>
+          <h3 className="text-sm md:text-base font-semibold mb-2">{t('welcome.features.picks')}</h3>
         </motion.div>
 
         <motion.div
-          className="p-6 rounded-lg bg-card/50 backdrop-blur-sm border shadow-lg"
+          className="p-4 md:p-6 rounded-lg bg-card/50 backdrop-blur-sm border shadow-lg"
           variants={item}
           whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.1)' }}
         >
           <motion.div animate={floatAnimation}>
-            <Sparkles className="w-8 h-8 mb-4 text-yellow-500" />
+            <Sparkles className="w-6 h-6 md:w-8 md:h-8 mb-3 md:mb-4 text-yellow-500" />
           </motion.div>
-          <h3 className="font-semibold mb-2">{t('welcome.features.discover')}</h3>
+          <h3 className="text-sm md:text-base font-semibold mb-2">{t('welcome.features.discover')}</h3>
         </motion.div>
       </motion.div>
 
       {/* Description */}
       <motion.p
-        className="max-w-xl text-lg text-muted-foreground"
+        className="max-w-xl text-base md:text-lg text-muted-foreground px-4"
         variants={item}
       >
         {t('welcome.description')}
@@ -127,10 +127,10 @@ export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
         <Button
           onClick={onStart}
           size="lg"
-          className="text-lg gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:opacity-90 shadow-lg"
+          className="text-base md:text-lg gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:opacity-90 shadow-lg px-6 py-3 h-auto"
         >
           {t('welcome.start')}
-          <Star className="w-5 h-5" />
+          <Star className="w-4 h-4 md:w-5 md:h-5" />
         </Button>
       </motion.div>
     </motion.div>
