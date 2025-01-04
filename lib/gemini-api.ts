@@ -81,51 +81,29 @@ For French translations, ensure:
 - Use appropriate French expressions
 - Keep technical terms and movie titles in their original form`
 
-  const prompt = `You are MoodFlix, a quirky and fun movie matchmaker with a great sense of humor! Your mission is to recommend movies that will vibe with this mood combo: ${dominantEmotions}${languageInstructions}
+  const generateMoviePrompt = (emotions: string[]) => `
+🎬 Hey Movie Guru! Time for some AWESOME movie picks! 🍿
 
-Role: Be a witty and entertaining movie curator who knows how to match vibes with the perfect films! Keep it fun, but make sure the recommendations are genuinely good.
+Based on the detected mood(s): ${emotions.join(', ')} 
 
-Task: Pick EXACTLY 3 AWESOME movies that will create a perfect movie night based on these vibes. Each movie MUST BE UNIQUE - no repeats allowed!
+Please suggest 3 AMAZING movies that would be perfect for this emotional state! Here's what we need:
 
-The Rules of the Game:
-1. Movie Must-Haves:
-   - One MUST be a fresh 2024/late 2023 release (keep it trendy!)
-   - All movies should be crowd-pleasers (7+ IMDb or critics' favorites)
-   - Mix of blockbusters and cool indie finds
-   - Nothing too obscure - we want movies people can actually watch!
-   - Be creative - surprise us with unexpected picks that totally work
-   - Bonus points for movies that will make people go "Oh, that's perfect!"
+Rules for the perfect movie mix:
+- 🌟 One MUST BE a 2024 release (super fresh!)
+- 🎯 Each movie MUST BE unique (no repeats, that's boring!)
+- ⭐ Only suggest highly-rated films (7+ on IMDb or major critic love)
+- 🎭 Mix it up! One mainstream hit, one hidden gem, and one wild card
+- 📺 For EACH movie, mention which major streaming platforms it's available on (Netflix, Disney+, Prime Video, Apple TV+, HBO Max)
 
-2. Vibe Check:
-   - Movies should match or complement the current mood
-   - Include some that will make people feel seen
-   - Throw in ones that might lift their spirits
-   - Think about the whole emotional journey
+For each movie, give me:
+1. Title (Year)
+2. A super fun one-liner about why it's perfect for the mood
+3. Available streaming platforms with emojis (🎬 Netflix, 👸 Disney+, 📦 Prime, 🍎 Apple TV+, 🎭 HBO Max)
+4. A witty fun fact that'll make someone go "Wow, I didn't know that!"
 
-3. Mix It Up:
-   - Each movie from a different genre (variety is the spice of life!)
-   - Different styles and vibes
-   - Balance between light fun and deeper feels
-   - Mix classic favorites with new discoveries
+Make it FUN and ENGAGING! Let's help find the perfect movie for this mood! 🎥✨`
 
-4. Keep It Real:
-   - Stick to movies people can easily find and stream
-   - Popular enough that friends might have seen them
-   - Perfect for movie night discussions
-   - Great for social media recommendations
-
-CRITICAL: Give me a JSON array of EXACTLY 3 DIFFERENT movie objects. Each should have:
-{
-  "title": "The exact movie title",
-  "description": "A fun, engaging description that captures why this movie is awesome (2-3 sentences)",
-  "matchReason": "A witty explanation of why this movie matches the current vibe (1-2 snappy sentences)",
-  "streamingPlatforms": ["Netflix", "Amazon Prime", "Disney+", "HBO Max", "Hulu", "Apple TV+"]
-}
-
-Remember: One movie MUST be super recent (2024/late 2023), and all picks should be surprisingly perfect for the mood!
-
-Just the JSON array please - no extra chit-chat!
-`
+  const prompt = generateMoviePrompt(dominantEmotions.split(' + '))
 
   try {
     console.log('Gemini API: Sending request...')

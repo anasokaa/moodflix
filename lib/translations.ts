@@ -2,108 +2,90 @@ export type Language = 'en' | 'fr' | 'es'
 
 export const translations = {
   en: {
-    language: {
-      select: 'Select language',
-      en: 'English',
-      fr: 'French',
-      es: 'Spanish'
-    },
     welcome: {
       title: 'MoodFlix',
-      subtitle: 'Your Magical Movie Matchmaker! ✨',
-      description: "Let's turn that mood into movie magic! 🎬 Snap a selfie and we'll find your perfect movie match."
+      description: 'Discover movies that match your mood! 🎬',
+      feature1: 'Take a selfie and let us analyze your mood',
+      feature2: 'Get personalized movie recommendations',
+      feature3: 'Find the perfect movie for your current vibe',
+      start: 'Let\'s Roll'
     },
     camera: {
-      start: 'Start Camera',
-      error: 'Camera access denied. Please allow camera access and try again.',
-      instructions: 'Position your face in the frame and smile! The photo will be taken automatically after the countdown.'
-    },
-    loading: {
-      analyzing: 'Analyzing your mood... 🎭',
-      regenerating: 'Finding more movies... 🎬'
+      start: 'Take a Photo',
+      instructions: 'Center your face in the frame and show us how you feel!',
+      error: 'Oops! Camera access failed. Please try again.',
+      processing: 'Processing your photo...'
     },
     movies: {
-      title: 'Your Movie Matches! 🎬',
-      error: 'Could not find movie suggestions. Please try again.',
-      dominantEmotion: 'Dominant emotion:',
+      title: 'Your Movie Matches',
+      dominantEmotion: 'Based on your mood:',
       availableOn: 'Available on:',
-      generateMore: 'Generate More Movies',
-      noMovies: 'No movies found. Please try again.'
+      generateMore: 'Show Me More Movies!',
+      error: 'Could not find movie suggestions. Please try again.'
     },
     buttons: {
-      letsRoll: "Let's Roll! 🎲 ⭐",
-      tryAgain: 'Try Again',
-      back: 'Back'
+      letsRoll: 'Let\'s Roll! 🎬',
+      tryAgain: 'Try Again 🔄',
+      takePicture: 'Take Picture 📸',
+      showMore: 'Show More Movies 🍿'
     }
   },
   fr: {
-    language: {
-      select: 'Choisir la langue',
-      en: 'Anglais',
-      fr: 'Français',
-      es: 'Espagnol'
-    },
     welcome: {
       title: 'MoodFlix',
-      subtitle: 'Votre Magicien du Cinéma! ✨',
-      description: 'Transformons votre humeur en magie cinématographique! 🎬 Prenez un selfie et nous trouverons vos films parfaits.'
+      description: 'Découvrez des films qui correspondent à votre humeur ! 🎬',
+      feature1: 'Prenez un selfie et laissez-nous analyser votre humeur',
+      feature2: 'Obtenez des recommandations personnalisées',
+      feature3: 'Trouvez le film parfait pour votre mood actuel',
+      start: 'C\'est Parti'
     },
     camera: {
-      start: 'Démarrer la Caméra',
-      error: "Accès à la caméra refusé. Veuillez autoriser l'accès et réessayer.",
-      instructions: 'Placez votre visage dans le cadre et souriez! La photo sera prise automatiquement après le compte à rebours.'
-    },
-    loading: {
-      analyzing: 'Analyse de votre humeur... 🎭',
-      regenerating: 'Recherche de nouveaux films... 🎬'
+      start: 'Prendre une Photo',
+      instructions: 'Centrez votre visage et montrez-nous votre humeur !',
+      error: 'Oups ! L\'accès à la caméra a échoué. Veuillez réessayer.',
+      processing: 'Traitement de votre photo...'
     },
     movies: {
-      title: 'Vos Films Recommandés! 🎬',
-      error: 'Impossible de trouver des suggestions de films. Veuillez réessayer.',
-      dominantEmotion: 'Émotion dominante:',
-      availableOn: 'Disponible sur:',
-      generateMore: 'Plus de Films',
-      noMovies: 'Aucun film trouvé. Veuillez réessayer.'
+      title: 'Vos Films Recommandés',
+      dominantEmotion: 'Selon votre humeur :',
+      availableOn: 'Disponible sur :',
+      generateMore: 'Plus de Films !',
+      error: 'Impossible de trouver des suggestions de films. Veuillez réessayer.'
     },
     buttons: {
-      letsRoll: 'Allons-y! 🎲 ⭐',
-      tryAgain: 'Réessayer',
-      back: 'Retour'
+      letsRoll: 'C\'est Parti ! 🎬',
+      tryAgain: 'Réessayer 🔄',
+      takePicture: 'Prendre une Photo 📸',
+      showMore: 'Plus de Films 🍿'
     }
   },
   es: {
-    language: {
-      select: 'Seleccionar idioma',
-      en: 'Inglés',
-      fr: 'Francés',
-      es: 'Español'
-    },
     welcome: {
       title: 'MoodFlix',
-      subtitle: '¡Tu Mago del Cine! ✨',
-      description: '¡Convirtamos ese estado de ánimo en magia cinematográfica! 🎬 Toma un selfie y encontraremos tus películas perfectas.'
+      description: '¡Descubre películas que coincidan con tu estado de ánimo! 🎬',
+      feature1: 'Toma un selfie y deja que analicemos tu humor',
+      feature2: 'Obtén recomendaciones personalizadas',
+      feature3: 'Encuentra la película perfecta para tu mood actual',
+      start: 'Empecemos'
     },
     camera: {
-      start: 'Iniciar Cámara',
-      error: 'Acceso a la cámara denegado. Por favor, permite el acceso e inténtalo de nuevo.',
-      instructions: '¡Coloca tu rostro en el marco y sonríe! La foto se tomará automáticamente después de la cuenta regresiva.'
-    },
-    loading: {
-      analyzing: 'Analizando tu estado de ánimo... 🎭',
-      regenerating: 'Buscando más películas... 🎬'
+      start: 'Tomar Foto',
+      instructions: '¡Centra tu cara y muéstranos cómo te sientes!',
+      error: '¡Ups! El acceso a la cámara falló. Por favor, inténtalo de nuevo.',
+      processing: 'Procesando tu foto...'
     },
     movies: {
-      title: '¡Tus Películas Recomendadas! 🎬',
-      error: 'No se pudieron encontrar sugerencias de películas. Por favor, inténtalo de nuevo.',
-      dominantEmotion: 'Emoción dominante:',
+      title: 'Tus Películas Recomendadas',
+      dominantEmotion: 'Según tu estado de ánimo:',
       availableOn: 'Disponible en:',
-      generateMore: 'Más Películas',
-      noMovies: 'No se encontraron películas. Por favor, inténtalo de nuevo.'
+      generateMore: '¡Más Películas!',
+      error: 'No se pudieron encontrar sugerencias de películas. Por favor, inténtalo de nuevo.'
     },
     buttons: {
-      letsRoll: '¡Vamos! 🎲 ⭐',
-      tryAgain: 'Intentar de Nuevo',
-      back: 'Volver'
+      letsRoll: '¡Empecemos! 🎬',
+      tryAgain: 'Intentar de Nuevo 🔄',
+      takePicture: 'Tomar Foto 📸',
+      showMore: 'Más Películas 🍿'
     }
   }
 } 
