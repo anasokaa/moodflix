@@ -10,6 +10,7 @@ import { Confetti } from '@/components/ui/confetti'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
 import { ArrowLeft } from 'lucide-react'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 interface Movie {
   title: string
@@ -52,7 +53,7 @@ export default function ClientPage({ onBack }: ClientPageProps) {
       setIsAnalyzing(true)
       setError(null)
       
-      console.log('Sending image for analysis...')
+      console.log('Starting image analysis...')
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
@@ -61,28 +62,32 @@ export default function ClientPage({ onBack }: ClientPageProps) {
         body: JSON.stringify({ image: imageData }),
       })
 
+      console.log('Response status:', response.status)
+      const responseData = await response.json()
+      console.log('Response data:', responseData)
+
       if (!response.ok) {
-        const errorData = await response.json()
-        console.error('API error:', errorData)
-        throw new Error(errorData.error || t('movies.error'))
+        console.error('API error:', responseData)
+        throw new Error(responseData.error || t('movies.error'))
       }
 
-      const result = await response.json()
-      console.log('Analysis result:', result)
-
-      if (!result.movies || !result.emotion) {
-        console.error('Invalid response format:', result)
+      if (!responseData.movies || !Array.isArray(responseData.movies) || responseData.movies.length === 0) {
+        console.error('Invalid movies data:', responseData)
         throw new Error(t('movies.noMovies'))
       }
 
-      console.log('Setting movies:', result.movies)
-      setMovies(result.movies)
-      console.log('Setting emotions:', result.emotion)
-      setEmotions(result.emotion)
+      if (!responseData.emotion) {
+        console.error('Missing emotion data:', responseData)
+        throw new Error(t('movies.error'))
+      }
+
+      console.log('Setting movies:', responseData.movies)
+      setMovies(responseData.movies)
+      console.log('Setting emotions:', responseData.emotion)
+      setEmotions(responseData.emotion)
       setShowConfetti(true)
       analyzeCount.current += 1
       
-      // Hide confetti after animation
       setTimeout(() => setShowConfetti(false), 3000)
     } catch (error) {
       console.error('Error in handleImageCapture:', error)
@@ -157,6 +162,8 @@ export default function ClientPage({ onBack }: ClientPageProps) {
         >
           <ArrowLeft className="h-6 w-6" />
         </Button>
+
+        <ThemeToggle />
 
         <Confetti trigger={showConfetti} />
 

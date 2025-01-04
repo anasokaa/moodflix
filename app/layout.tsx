@@ -4,6 +4,8 @@ import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { LanguageProvider } from '@/lib/language-context'
 import { LanguageSwitcher } from '@/components/language-switcher'
+import { cn } from '@/lib/utils'
+import { fontSans } from '@/styles/fonts'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -18,20 +20,23 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
+    <ThemeProvider
+      attribute="class"
+      defaultTheme="system"
+      enableSystem
+      disableTransitionOnChange
+    >
+      <html lang="en" suppressHydrationWarning>
+        <head>
+          <title>MoodFlix</title>
+        </head>
+        <body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable)}>
           <LanguageProvider>
             <LanguageSwitcher />
             {children}
           </LanguageProvider>
-        </ThemeProvider>
-      </body>
-    </html>
+        </body>
+      </html>
+    </ThemeProvider>
   )
 } 
