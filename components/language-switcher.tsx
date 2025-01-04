@@ -1,22 +1,31 @@
 'use client'
 
 import { useLanguage } from '@/lib/language-context'
-import { type Language } from '@/lib/translations'
+import { Button } from '@/components/ui/button'
+
+type Language = 'en' | 'fr'
 
 export function LanguageSwitcher() {
   const { currentLanguage, setLanguage } = useLanguage()
 
+  const languages: Language[] = ['en', 'fr']
+  const languageNames: Record<Language, string> = {
+    en: 'English 🇬🇧',
+    fr: 'Français 🇫🇷'
+  }
+
   return (
-    <div className="fixed top-4 right-4 flex items-center gap-2">
-      <select
-        value={currentLanguage}
-        onChange={(e) => setLanguage(e.target.value as Language)}
-        className="bg-background/80 backdrop-blur-sm border rounded-lg px-2 py-1 text-sm"
-      >
-        <option value="en">English</option>
-        <option value="fr">Français</option>
-        <option value="es">Español</option>
-      </select>
+    <div className="flex gap-2">
+      {languages.map((lang) => (
+        <Button
+          key={lang}
+          variant={currentLanguage === lang ? 'default' : 'outline'}
+          onClick={() => setLanguage(lang)}
+          className="rounded-full"
+        >
+          {languageNames[lang]}
+        </Button>
+      ))}
     </div>
   )
 } 
