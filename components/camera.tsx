@@ -3,7 +3,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { useLanguage } from '@/lib/language-context'
 import { Button } from '@/components/ui/button'
-import { Camera as CameraIcon, Aperture } from 'lucide-react'
+import { Camera as CameraIcon, Aperture, RefreshCw } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface CameraProps {
@@ -15,6 +15,8 @@ export function Camera({ onCapture }: CameraProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [isCountingDown, setIsCountingDown] = useState(false)
+  const [countdown, setCountdown] = useState(3)
 
   // Cleanup function
   const stopStream = useCallback(() => {
@@ -109,8 +111,6 @@ export function Camera({ onCapture }: CameraProps) {
   }, [stopStream])
 
   const captureImage = useCallback(() => {
-    console.log('Attempting to capture image...')
-    
     if (!videoRef.current) {
       console.error('Video element not found during capture')
       setError('Failed to capture image: video element not found')
@@ -118,43 +118,42 @@ export function Camera({ onCapture }: CameraProps) {
     }
 
     try {
-      // Wait for video to be ready
-      if (!videoRef.current.videoWidth || !videoRef.current.videoHeight) {
-        console.error('Video dimensions not available')
-        setError('Failed to capture image: video not ready')
-        return
-      }
+      // Start countdown
+      setIsCountingDown(true)
+      setCountdown(3)
 
-      const canvas = document.createElement('canvas')
-      canvas.width = videoRef.current.videoWidth
-      canvas.height = videoRef.current.videoHeight
-      console.log('Canvas dimensions:', canvas.width, 'x', canvas.height)
+      const countdownInterval = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownInterval)
+            setIsCountingDown(false)
+            // Take the actual photo
+            const canvas = document.createElement('canvas')
+            canvas.width = videoRef.current!.videoWidth
+            canvas.height = videoRef.current!.videoHeight
 
-      const ctx = canvas.getContext('2d')
-      if (!ctx) {
-        console.error('Failed to get canvas context')
-        setError('Failed to capture image: canvas context not available')
-        return
-      }
+            const ctx = canvas.getContext('2d')
+            if (!ctx) {
+              throw new Error('Failed to get canvas context')
+            }
 
-      // Mirror the image if the video is mirrored
-      ctx.scale(-1, 1)
-      ctx.translate(-canvas.width, 0)
-      
-      ctx.drawImage(videoRef.current, 0, 0)
-      console.log('Image drawn to canvas')
+            // Mirror the image if the video is mirrored
+            ctx.scale(-1, 1)
+            ctx.translate(-canvas.width, 0)
+            ctx.drawImage(videoRef.current!, 0, 0)
 
-      const imageData = canvas.toDataURL('image/jpeg', 0.8)
-      console.log('Image converted to data URL')
-      
-      console.log('Calling onCapture with image data...')
-      onCapture(imageData)
-      console.log('Image capture complete')
-      
-      stopStream()
+            const imageData = canvas.toDataURL('image/jpeg', 0.8)
+            onCapture(imageData)
+            stopStream()
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
     } catch (err) {
       console.error('Capture error:', err)
       setError('Failed to capture image: ' + (err instanceof Error ? err.message : 'unknown error'))
+      setIsCountingDown(false)
     }
   }, [onCapture, stopStream])
 
@@ -168,12 +167,46 @@ export function Camera({ onCapture }: CameraProps) {
           muted
         />
         
+        {/* Face guide overlay */}
+        {isStreaming && !isCountingDown && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <motion.div
+              className="w-48 h-48 rounded-full border-2 border-primary/50 border-dashed"
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5 }}
+            />
+          </div>
+        )}
+
+        {/* Countdown overlay */}
+        <AnimatePresence>
+          {isCountingDown && (
+            <motion.div
+              className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              <motion.div
+                key={countdown}
+                className="text-6xl font-bold text-white"
+                initial={{ scale: 2, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+              >
+                {countdown}
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        
         <div className="absolute inset-0 flex items-center justify-center">
           {error ? (
-            <div className="text-center p-4 bg-background/80 backdrop-blur-sm rounded-lg">
+            <div className="text-center p-6 bg-background/80 backdrop-blur-sm rounded-lg max-w-md">
               <p className="text-destructive mb-4">{error}</p>
-              <Button onClick={startCamera} variant="secondary">
-                <CameraIcon className="mr-2 h-4 w-4" />
+              <Button onClick={startCamera} variant="secondary" size="lg" className="gap-2">
+                <RefreshCw className="w-5 h-5" />
                 {t('camera.tryAgain')}
               </Button>
             </div>
@@ -181,9 +214,9 @@ export function Camera({ onCapture }: CameraProps) {
             <Button 
               onClick={startCamera} 
               size="lg"
-              className="text-lg"
+              className="text-lg gap-2 bg-primary/90 hover:bg-primary/100 shadow-lg"
             >
-              <CameraIcon className="mr-2 h-5 w-5" />
+              <CameraIcon className="w-6 h-6" />
               {t('camera.letMeSeeYourSmile')}
             </Button>
           ) : (
@@ -197,9 +230,10 @@ export function Camera({ onCapture }: CameraProps) {
                   onClick={captureImage}
                   size="lg"
                   variant="secondary"
-                  className="text-lg bg-background/80 backdrop-blur-sm hover:bg-background/90"
+                  className="text-lg gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90 shadow-lg"
+                  disabled={isCountingDown}
                 >
-                  <Aperture className="mr-2 h-5 w-5" />
+                  <Aperture className="w-6 h-6" />
                   {t('camera.captureTheMoment')}
                 </Button>
               </motion.div>

@@ -96,31 +96,21 @@ export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: Mo
       {/* Emotions Display */}
       {significantEmotions && Object.keys(significantEmotions).length > 0 && (
         <motion.div 
-          className="grid gap-4 p-6 bg-card rounded-lg shadow-lg"
+          className="grid gap-4 p-6 bg-card rounded-lg shadow-lg backdrop-blur-sm border"
           variants={item}
         >
-          <h2 className="text-2xl font-bold text-center bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">
-            {t('movies.title')} 🎭
-          </h2>
-          <div className="grid gap-3">
+          <h2 className="text-2xl font-bold text-center mb-2">{t('movies.subtitle')}</h2>
+          <div className="grid gap-4">
             {Object.entries(significantEmotions).map(([emotion, value]) => (
-              <motion.div 
-                key={emotion} 
-                className="grid gap-2"
-                whileHover={{ scale: 1.02 }}
-              >
-                <div className="flex justify-between text-sm">
-                  <span className="capitalize flex items-center gap-2">
-                    {t(`emotions.${emotion}`)}
-                    {value >= 0.5 && '🔥'}
+              <div key={emotion} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">{t(`emotions.${emotion}`)}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {Math.round(value * 100)}%
                   </span>
-                  <span>{(value * 100).toFixed(1)}%</span>
                 </div>
-                <Progress 
-                  value={value * 100} 
-                  className="h-2 bg-secondary"
-                />
-              </motion.div>
+                <Progress value={value * 100} className="h-2" />
+              </div>
             ))}
           </div>
         </motion.div>
@@ -128,50 +118,48 @@ export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: Mo
 
       {/* Movies Grid */}
       <motion.div 
-        className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
-        variants={container}
+        className="grid gap-6 md:grid-cols-3"
+        variants={item}
       >
         {movies.map((movie, index) => (
           <motion.div
-            key={`${movie.title}-${index}`}
+            key={movie.title}
             variants={item}
-            whileHover={{ scale: 1.03 }}
-            className="h-full"
+            whileHover={{ scale: 1.02 }}
+            className="group"
           >
-            <Card className="overflow-hidden bg-card h-full flex flex-col">
+            <Card className="overflow-hidden h-full bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-colors">
               <div className="relative aspect-[2/3] overflow-hidden">
                 <Image
-                  src={movie.posterUrl || '/movie-placeholder.jpg'}
-                  alt={`${movie.title} poster`}
+                  src={movie.posterUrl}
+                  alt={movie.title}
                   fill
-                  className="object-cover transition-transform hover:scale-105"
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-cover transition-transform group-hover:scale-105"
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                 />
               </div>
-              <div className="p-4 space-y-4 flex-1 flex flex-col">
-                <h3 className="text-xl font-bold">{movie.title}</h3>
-                <p className="text-sm text-muted-foreground flex-1">{movie.description}</p>
-                <p className="text-sm italic text-accent">{movie.matchReason}</p>
-                {movie.streamingPlatforms.length > 0 && (
-                  <div>
-                    <h4 className="text-sm font-semibold mb-2">{t('movies.watchOn')}:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {movie.streamingPlatforms.map((platform) => {
-                        const baseClass = "px-3 py-1.5 text-xs rounded-full text-white font-medium"
-                        const colorClass = platformColors[platform] || 'bg-gray-600'
-                        return (
-                          <motion.span
-                            key={`${movie.title}-${platform}`}
-                            className={`${baseClass} ${colorClass}`}
-                            whileHover={{ scale: 1.1 }}
-                          >
-                            {platform}
-                          </motion.span>
-                        )
-                      })}
-                    </div>
+              <div className="p-4 space-y-4">
+                <h3 className="text-xl font-bold leading-tight">{movie.title}</h3>
+                <p className="text-sm text-muted-foreground line-clamp-3">
+                  {movie.description}
+                </p>
+                <div className="space-y-2">
+                  <p className="text-sm font-medium text-primary">
+                    {movie.matchReason}
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {movie.streamingPlatforms.map(platform => (
+                      <span
+                        key={platform}
+                        className={`px-2 py-1 text-xs rounded-full text-white ${
+                          platformColors[platform] || 'bg-gray-600'
+                        }`}
+                      >
+                        {platform}
+                      </span>
+                    ))}
                   </div>
-                )}
+                </div>
               </div>
             </Card>
           </motion.div>
@@ -180,15 +168,15 @@ export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: Mo
 
       {/* Generate More Button */}
       <motion.div 
-        className="flex justify-center mt-8"
+        className="flex justify-center pt-4"
         variants={item}
       >
         <Button
           onClick={onGenerateMore}
           size="lg"
-          className="bg-gradient-to-r from-purple-400 to-pink-600 text-white hover:opacity-90 gap-2"
+          className="gap-2 bg-primary/90 hover:bg-primary/100 shadow-lg"
         >
-          {t('movies.generateMore')} ✨
+          {t('movies.generateMore')}
         </Button>
       </motion.div>
     </motion.div>

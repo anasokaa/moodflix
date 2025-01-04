@@ -10,6 +10,21 @@ interface WelcomeScreenProps {
   onStart: () => void
 }
 
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+}
+
+const item = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 }
+}
+
 const floatAnimation = {
   y: [0, -10, 0],
   transition: {
@@ -22,107 +37,100 @@ const floatAnimation = {
 
 export function WelcomeScreen({ onStart }: WelcomeScreenProps) {
   const { t } = useLanguage()
+  const [isHovered, setIsHovered] = useState(false)
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
+      variants={container}
+      initial="hidden"
+      animate="show"
       className="flex flex-col items-center justify-center min-h-screen space-y-12 px-4 text-center"
     >
-      {/* Logo and Emojis */}
-      <motion.div className="space-y-4">
-        <motion.h1
-          className="text-4xl font-bold bg-gradient-to-r from-pink-500 to-pink-600 bg-clip-text text-transparent"
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          transition={{ type: "spring", duration: 0.8 }}
-        >
-          MoodFlix
-        </motion.h1>
-        <div className="flex justify-center gap-4 text-3xl">
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.2 }}
-          >
-            🍿
-          </motion.span>
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.3 }}
-          >
-            🎬
-          </motion.span>
-          <motion.span
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            transition={{ delay: 0.4 }}
-          >
-            ❤️
-          </motion.span>
-        </div>
-      </motion.div>
-
-      {/* Main Content */}
-      <motion.div
-        className="space-y-8"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5 }}
+      {/* Logo and Title */}
+      <motion.div 
+        className="relative space-y-4"
+        variants={item}
       >
-        <div className="space-y-2">
-          <h2 className="text-2xl font-semibold">
-            Ready for Movie Magic? ✨
-          </h2>
-          <p className="text-muted-foreground">
-            Show us your mood, unlock your perfect movie match!
-          </p>
-        </div>
-
-        <div className="space-y-4 text-left">
-          <motion.div
-            className="flex items-center gap-2"
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.6 }}
-          >
-            <span>📸</span>
-            <span>Express yourself</span>
-          </motion.div>
-          <motion.div
-            className="flex items-center gap-2"
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.7 }}
-          >
-            <span>🎯</span>
-            <span>Get personalized picks</span>
-          </motion.div>
-          <motion.div
-            className="flex items-center gap-2"
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ delay: 0.8 }}
-          >
-            <span>✨</span>
-            <span>Discover hidden gems</span>
-          </motion.div>
-        </div>
+        <motion.div
+          className="absolute -inset-4 bg-gradient-to-r from-pink-500/20 to-purple-500/20 blur-xl"
+          animate={{
+            scale: isHovered ? 1.2 : 1,
+            opacity: isHovered ? 0.8 : 0.5
+          }}
+          transition={{ duration: 0.3 }}
+        />
+        <motion.h1
+          className="text-5xl font-bold bg-gradient-to-r from-pink-500 to-purple-600 bg-clip-text text-transparent relative"
+          onHoverStart={() => setIsHovered(true)}
+          onHoverEnd={() => setIsHovered(false)}
+          whileHover={{ scale: 1.05 }}
+        >
+          {t('welcome.title')}
+        </motion.h1>
+        <motion.p
+          className="text-xl text-muted-foreground"
+          variants={item}
+        >
+          {t('welcome.subtitle')}
+        </motion.p>
       </motion.div>
+
+      {/* Features */}
+      <motion.div 
+        className="grid gap-6 md:grid-cols-3 max-w-3xl"
+        variants={container}
+      >
+        <motion.div
+          className="p-6 rounded-lg bg-card/50 backdrop-blur-sm border shadow-lg"
+          variants={item}
+          whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.1)' }}
+        >
+          <motion.div animate={floatAnimation}>
+            <Camera className="w-8 h-8 mb-4 text-pink-500" />
+          </motion.div>
+          <h3 className="font-semibold mb-2">{t('welcome.features.express')}</h3>
+        </motion.div>
+
+        <motion.div
+          className="p-6 rounded-lg bg-card/50 backdrop-blur-sm border shadow-lg"
+          variants={item}
+          whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.1)' }}
+        >
+          <motion.div animate={floatAnimation}>
+            <Film className="w-8 h-8 mb-4 text-purple-500" />
+          </motion.div>
+          <h3 className="font-semibold mb-2">{t('welcome.features.picks')}</h3>
+        </motion.div>
+
+        <motion.div
+          className="p-6 rounded-lg bg-card/50 backdrop-blur-sm border shadow-lg"
+          variants={item}
+          whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.1)' }}
+        >
+          <motion.div animate={floatAnimation}>
+            <Sparkles className="w-8 h-8 mb-4 text-yellow-500" />
+          </motion.div>
+          <h3 className="font-semibold mb-2">{t('welcome.features.discover')}</h3>
+        </motion.div>
+      </motion.div>
+
+      {/* Description */}
+      <motion.p
+        className="max-w-xl text-lg text-muted-foreground"
+        variants={item}
+      >
+        {t('welcome.description')}
+      </motion.p>
 
       {/* Start Button */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.9 }}
-      >
+      <motion.div variants={item}>
         <Button
           onClick={onStart}
           size="lg"
-          className="bg-pink-600 hover:bg-pink-700 text-white px-8 py-6 text-lg rounded-full"
+          className="text-lg gap-2 bg-gradient-to-r from-pink-500 to-purple-600 text-white hover:opacity-90 shadow-lg"
         >
-          Start Your Journey! ✨
+          {t('welcome.start')}
+          <Star className="w-5 h-5" />
         </Button>
       </motion.div>
     </motion.div>
