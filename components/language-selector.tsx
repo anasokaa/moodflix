@@ -9,12 +9,18 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Languages } from 'lucide-react'
 import { useLanguage } from '@/lib/language-context'
-import type { Language } from '@/lib/translations'
+
+const languageNames = {
+  en: 'English 🇬🇧',
+  fr: 'Français 🇫🇷'
+}
+
+type Language = keyof typeof languageNames
 
 export function LanguageSelector() {
   const { t, currentLanguage, setLanguage } = useLanguage()
 
-  const languages: Language[] = ['en', 'fr', 'es']
+  const languages: Language[] = ['en', 'fr']
 
   return (
     <DropdownMenu>
@@ -25,17 +31,18 @@ export function LanguageSelector() {
           className="rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90"
         >
           <Languages className="h-5 w-5" />
-          <span className="sr-only">{t('language.select')}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-background/95 backdrop-blur-sm">
+      <DropdownMenuContent align="end">
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang}
             onClick={() => setLanguage(lang)}
-            className={`${currentLanguage === lang ? 'bg-primary/20' : ''} cursor-pointer hover:bg-primary/10`}
+            className={`cursor-pointer ${
+              currentLanguage === lang ? 'bg-primary/10 text-primary' : ''
+            }`}
           >
-            {t(`language.${lang}`)}
+            {languageNames[lang]}
           </DropdownMenuItem>
         ))}
       </DropdownMenuContent>

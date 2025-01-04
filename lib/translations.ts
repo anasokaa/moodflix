@@ -1,62 +1,42 @@
-export type Language = 'en' | 'fr'
-
 export const translations = {
   en: {
     welcome: {
-      title: 'MoodFlix',
-      description: 'Ready to find your perfect movie match? Let the magic begin! ✨',
-      feature1: 'Strike your best pose and let us read your vibe! 📸',
-      feature2: 'Get movie suggestions that match your mood perfectly! 🎯',
-      feature3: 'Discover hidden gems and blockbusters just for you! 🍿',
-      start: 'Let the Fun Begin!'
+      title: "Ready to find your perfect movie match? ✨",
+      subtitle: "Let MoodFlix analyze your mood and suggest the perfect movies for you!",
+      start: "Start the Magic! 🎬"
     },
     camera: {
-      start: 'Time for Your Close-up!',
-      instructions: 'Show us your best mood face! 🤩',
-      error: 'Oopsie! Camera got stage fright. Let\'s try again! 🎬',
-      processing: 'Working our movie magic... ✨'
+      start: "Show us your best mood face! 📸",
+      retake: "Try Again 🔄",
+      analyzing: "Reading your mood... ✨",
+      error: "Oops! Something went wrong. Please try again! 🙈"
     },
     movies: {
-      title: 'Your Perfect Movie Matches! 🎬',
-      dominantEmotion: 'Your current vibe:',
-      availableOn: 'Where to watch:',
-      generateMore: 'More Movie Magic! ✨',
-      error: 'Whoops! Our movie wizard needs another try! 🪄'
-    },
-    buttons: {
-      letsRoll: 'Let\'s Roll! 🎬',
-      tryAgain: 'Take 2! 🎬',
-      takePicture: 'Lights, Camera, Action! 📸',
-      showMore: 'Show Me More Magic! 🍿'
+      title: "Your Perfect Movie Matches! 🎬",
+      loading: "Finding your perfect movies... 🍿",
+      error: "Could not find movie suggestions. Please try again! 🎭",
+      regenerate: "More Movie Magic! ✨",
+      tryAgain: "Try Another Mood! 🎭"
     }
   },
   fr: {
     welcome: {
-      title: 'MoodFlix',
-      description: 'Prêt à trouver le film parfait pour ton humeur ? La magie commence ! ✨',
-      feature1: 'Fais ta plus belle pose et laisse-nous deviner ton mood ! 📸',
-      feature2: 'Des films choisis spécialement pour ton humeur ! 🎯',
-      feature3: 'Découvre des pépites et des blockbusters rien que pour toi ! 🍿',
-      start: 'Que le Show Commence !'
+      title: "Prêt à trouver le film parfait pour ton humeur ? ✨",
+      subtitle: "Laisse MoodFlix analyser ton humeur et te suggérer les films parfaits !",
+      start: "Commencer la Magie ! 🎬"
     },
     camera: {
-      start: 'À Toi de Jouer !',
-      instructions: 'Montre-nous ton plus beau mood ! 🤩',
-      error: 'Oups ! La caméra a le trac. On réessaie ! 🎬',
-      processing: 'La magie opère... ✨'
+      start: "Montre-nous ton plus beau mood ! 📸",
+      retake: "Réessayer 🔄",
+      analyzing: "Lecture de ton humeur... ✨",
+      error: "Oups ! Quelque chose s'est mal passé. Réessaie ! 🙈"
     },
     movies: {
-      title: 'Tes Films Parfaits ! 🎬',
-      dominantEmotion: 'Ton mood actuel :',
-      availableOn: 'À voir sur :',
-      generateMore: 'Plus de Magie ! ✨',
-      error: 'Oups ! Notre magicien du cinéma a besoin d\'un autre essai ! 🪄'
-    },
-    buttons: {
-      letsRoll: 'C\'est Parti ! 🎬',
-      tryAgain: 'On la Refait ! 🎬',
-      takePicture: 'Moteur, Ça Tourne ! 📸',
-      showMore: 'Encore Plus de Films ! 🍿'
+      title: "Tes Films Parfaits ! 🎬",
+      loading: "Recherche de tes films parfaits... 🍿",
+      error: "Impossible de trouver des suggestions de films. Réessaie ! 🎭",
+      regenerate: "Plus de Magie Cinéma ! ✨",
+      tryAgain: "Essaie une Autre Humeur ! 🎭"
     }
   }
 } 
