@@ -24,8 +24,17 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
       
       if (videoRef.current) {
         videoRef.current.srcObject = stream
-        videoRef.current.play()
-        setIsActive(true)
+        // Wait for video to be ready
+        videoRef.current.onloadedmetadata = () => {
+          if (videoRef.current) {
+            videoRef.current.play()
+              .then(() => setIsActive(true))
+              .catch((err) => {
+                console.error('Error playing video:', err)
+                setError(t('camera.error'))
+              })
+          }
+        }
       }
     } catch (err) {
       console.error('Error accessing camera:', err)
@@ -36,27 +45,34 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
   const captureImage = useCallback(() => {
     if (!videoRef.current) return
 
-    const canvas = document.createElement('canvas')
-    canvas.width = videoRef.current.videoWidth
-    canvas.height = videoRef.current.videoHeight
-    
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    
-    // Flip horizontally to mirror the image
-    ctx.translate(canvas.width, 0)
-    ctx.scale(-1, 1)
-    
-    ctx.drawImage(videoRef.current, 0, 0)
-    const imageData = canvas.toDataURL('image/jpeg', 0.8)
+    try {
+      const canvas = document.createElement('canvas')
+      canvas.width = videoRef.current.videoWidth
+      canvas.height = videoRef.current.videoHeight
+      
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        throw new Error('Could not get canvas context')
+      }
+      
+      // Flip horizontally to mirror the image
+      ctx.translate(canvas.width, 0)
+      ctx.scale(-1, 1)
+      
+      ctx.drawImage(videoRef.current, 0, 0)
+      const imageData = canvas.toDataURL('image/jpeg', 0.8)
 
-    // Stop the camera stream
-    const stream = videoRef.current.srcObject as MediaStream
-    stream?.getTracks().forEach(track => track.stop())
-    setIsActive(false)
-    
-    onCapture(imageData)
-  }, [onCapture])
+      // Stop the camera stream
+      const stream = videoRef.current.srcObject as MediaStream
+      stream?.getTracks().forEach(track => track.stop())
+      setIsActive(false)
+      
+      onCapture(imageData)
+    } catch (err) {
+      console.error('Error capturing image:', err)
+      setError(t('camera.error'))
+    }
+  }, [onCapture, t])
 
   // Clean up camera stream when component unmounts
   useEffect(() => {
@@ -96,6 +112,7 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
               ref={videoRef}
               autoPlay
               playsInline
+              muted // Add muted to ensure autoplay works
               className="w-full h-full object-cover transform scale-x-[-1]"
             />
             
