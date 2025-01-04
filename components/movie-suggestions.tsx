@@ -1,12 +1,19 @@
 'use client'
 
-import Image from 'next/image'
-import { Card } from '@/components/ui/card'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Progress } from '@/components/ui/progress'
+import { motion } from 'framer-motion'
 import { useLanguage } from '@/lib/language-context'
 import { Button } from '@/components/ui/button'
-import { motion } from 'framer-motion'
+import { Badge } from '@/components/ui/badge'
+import { Card } from '@/components/ui/card'
+import { Sparkles } from 'lucide-react'
+
+interface Movie {
+  title: string
+  description: string
+  matchReason: string
+  posterUrl: string
+  streamingPlatforms: string[]
+}
 
 interface EmotionData {
   anger: number
@@ -18,14 +25,6 @@ interface EmotionData {
   surprise: number
 }
 
-interface Movie {
-  title: string
-  description: string
-  matchReason: string
-  posterUrl: string
-  streamingPlatforms: string[]
-}
-
 interface MovieSuggestionsProps {
   movies: Movie[]
   emotions?: EmotionData
@@ -33,152 +32,106 @@ interface MovieSuggestionsProps {
   onGenerateMore: () => void
 }
 
-// Map of streaming platform names to their brand colors
-const platformColors: Record<string, string> = {
-  'Netflix': 'bg-red-600',
-  'Amazon Prime': 'bg-blue-500',
-  'Disney+': 'bg-blue-600',
-  'Hulu': 'bg-green-500',
-  'HBO Max': 'bg-purple-600',
-  'Apple TV+': 'bg-gray-800',
-  'Paramount+': 'bg-blue-700',
-  'Peacock': 'bg-yellow-500'
-}
+export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: MovieSuggestionsProps) {
+  const { t, currentLanguage } = useLanguage()
 
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.2
+  const emotionTranslations = {
+    en: {
+      anger: 'Anger',
+      disgust: 'Disgust',
+      fear: 'Fear',
+      happiness: 'Joy',
+      neutral: 'Neutral',
+      sadness: 'Sadness',
+      surprise: 'Surprise'
+    },
+    fr: {
+      anger: 'Colère',
+      disgust: 'Dégoût',
+      fear: 'Peur',
+      happiness: 'Joie',
+      neutral: 'Neutre',
+      sadness: 'Tristesse',
+      surprise: 'Surprise'
+    },
+    es: {
+      anger: 'Ira',
+      disgust: 'Asco',
+      fear: 'Miedo',
+      happiness: 'Alegría',
+      neutral: 'Neutral',
+      sadness: 'Tristeza',
+      surprise: 'Sorpresa'
     }
   }
-}
 
-const item = {
-  hidden: { opacity: 0, y: 20 },
-  show: { opacity: 1, y: 0 }
-}
-
-export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: MovieSuggestionsProps) {
-  const { t } = useLanguage()
-
-  if (error) {
-    return (
-      <Alert className="border-destructive bg-destructive/10">
-        <AlertDescription>{error}</AlertDescription>
-      </Alert>
-    )
+  const getEmotionName = (emotion: string) => {
+    return emotionTranslations[currentLanguage as keyof typeof emotionTranslations]?.[emotion as keyof typeof emotionTranslations['en']] || emotion
   }
 
-  if (!movies || movies.length === 0) {
-    return null
-  }
-
-  // Filter emotions to only show those above 20%
-  const significantEmotions = emotions ? 
+  const dominantEmotion = emotions ? 
     Object.entries(emotions)
-      .filter(([_, value]) => value >= 0.2)
-      .sort((a, b) => b[1] - a[1])
-      .reduce((acc, [key, value]) => ({
-        ...acc,
-        [key]: value
-      }), {} as EmotionData) 
+      .reduce((a, b) => a[1] > b[1] ? a : b)[0]
     : null
 
   return (
-    <motion.div 
-      className="space-y-6 md:space-y-8 p-4 max-w-7xl mx-auto"
-      variants={container}
-      initial="hidden"
-      animate="show"
-    >
-      {/* Emotions Display */}
-      {significantEmotions && Object.keys(significantEmotions).length > 0 && (
-        <motion.div 
-          className="grid gap-3 md:gap-4 p-4 md:p-6 bg-card rounded-lg shadow-lg backdrop-blur-sm border"
-          variants={item}
-        >
-          <h2 className="text-xl md:text-2xl font-bold text-center mb-2">{t('movies.subtitle')}</h2>
-          <div className="grid gap-3 md:gap-4">
-            {Object.entries(significantEmotions).map(([emotion, value]) => (
-              <div key={emotion} className="space-y-1.5 md:space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm md:text-base font-medium">{t(`emotions.${emotion}`)}</span>
-                  <span className="text-xs md:text-sm text-muted-foreground">
-                    {Math.round(value * 100)}%
-                  </span>
-                </div>
-                <Progress value={value * 100} className="h-1.5 md:h-2" />
-              </div>
-            ))}
-          </div>
-        </motion.div>
-      )}
+    <div className="space-y-8">
+      <div className="text-center space-y-4">
+        <h2 className="text-2xl md:text-3xl font-bold">{t('movies.title')}</h2>
+        {dominantEmotion && (
+          <p className="text-muted-foreground">
+            {t('movies.dominantEmotion')} {getEmotionName(dominantEmotion)}
+          </p>
+        )}
+      </div>
 
-      {/* Movies Grid */}
-      <motion.div 
-        className="grid gap-4 md:gap-6 grid-cols-1 sm:grid-cols-2 md:grid-cols-3"
-        variants={item}
-      >
-        {movies.map((movie, index) => (
-          <motion.div
-            key={movie.title}
-            variants={item}
-            whileHover={{ scale: 1.02 }}
-            className="group"
-          >
-            <Card className="overflow-hidden h-full bg-card/50 backdrop-blur-sm hover:bg-card/80 transition-colors">
-              <div className="relative aspect-[2/3] overflow-hidden">
-                <Image
-                  src={movie.posterUrl}
-                  alt={movie.title}
-                  fill
-                  className="object-cover transition-transform group-hover:scale-105"
-                  sizes="(max-width: 640px) 100vw, (max-width: 768px) 50vw, 33vw"
-                />
-              </div>
-              <div className="p-3 md:p-4 space-y-3 md:space-y-4">
-                <h3 className="text-lg md:text-xl font-bold leading-tight">{movie.title}</h3>
-                <p className="text-xs md:text-sm text-muted-foreground line-clamp-3">
-                  {movie.description}
-                </p>
-                <div className="space-y-2">
-                  <p className="text-xs md:text-sm font-medium text-primary">
-                    {movie.matchReason}
-                  </p>
-                  <div className="flex flex-wrap gap-1.5 md:gap-2">
-                    {movie.streamingPlatforms.map(platform => (
-                      <span
-                        key={platform}
-                        className={`px-1.5 md:px-2 py-0.5 md:py-1 text-[10px] md:text-xs rounded-full text-white ${
-                          platformColors[platform] || 'bg-gray-600'
-                        }`}
-                      >
-                        {platform}
-                      </span>
-                    ))}
+      {error ? (
+        <div className="text-center text-destructive">{error}</div>
+      ) : (
+        <div className="grid gap-6 md:gap-8">
+          {movies.map((movie, index) => (
+            <Card key={movie.title} className="overflow-hidden bg-card">
+              <div className="grid md:grid-cols-[200px,1fr] gap-4">
+                <div className="aspect-[2/3] relative">
+                  <img
+                    src={movie.posterUrl}
+                    alt={movie.title}
+                    className="absolute inset-0 w-full h-full object-cover"
+                  />
+                </div>
+                <div className="p-4 md:p-6 space-y-4">
+                  <h3 className="text-xl md:text-2xl font-bold">{movie.title}</h3>
+                  <p className="text-muted-foreground">{movie.description}</p>
+                  <p className="italic">{movie.matchReason}</p>
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">{t('movies.availableOn')}</p>
+                    <div className="flex flex-wrap gap-2">
+                      {movie.streamingPlatforms.map((platform) => (
+                        <Badge key={platform} variant="secondary">
+                          {platform}
+                        </Badge>
+                      ))}
+                    </div>
                   </div>
                 </div>
               </div>
             </Card>
-          </motion.div>
-        ))}
-      </motion.div>
+          ))}
+        </div>
+      )}
 
-      {/* Generate More Button */}
-      <motion.div 
-        className="flex justify-center pt-2 md:pt-4"
-        variants={item}
-      >
-        <Button
-          onClick={onGenerateMore}
-          size="lg"
-          className="text-sm md:text-base gap-2 bg-primary/90 hover:bg-primary/100 shadow-lg px-4 md:px-6 py-2 md:py-3 h-auto"
-        >
-          {t('movies.generateMore')}
-        </Button>
-      </motion.div>
-    </motion.div>
+      {!error && movies.length > 0 && (
+        <div className="flex justify-center">
+          <Button
+            onClick={onGenerateMore}
+            size="lg"
+            className="gap-2"
+          >
+            <Sparkles className="w-4 h-4" />
+            {t('movies.generateMore')}
+          </Button>
+        </div>
+      )}
+    </div>
   )
 } 

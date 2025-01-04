@@ -30,10 +30,44 @@ export async function getMovieSuggestions(emotions: EmotionData, language: strin
   const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
 
   // Find dominant emotions (those above 20%)
+  const emotionTranslations = {
+    en: {
+      anger: 'Anger',
+      disgust: 'Disgust',
+      fear: 'Fear',
+      happiness: 'Joy',
+      neutral: 'Neutral',
+      sadness: 'Sadness',
+      surprise: 'Surprise'
+    },
+    fr: {
+      anger: 'Colère',
+      disgust: 'Dégoût',
+      fear: 'Peur',
+      happiness: 'Joie',
+      neutral: 'Neutre',
+      sadness: 'Tristesse',
+      surprise: 'Surprise'
+    },
+    es: {
+      anger: 'Ira',
+      disgust: 'Asco',
+      fear: 'Miedo',
+      happiness: 'Alegría',
+      neutral: 'Neutral',
+      sadness: 'Tristeza',
+      surprise: 'Sorpresa'
+    }
+  }
+
+  const getEmotionName = (emotion: string) => {
+    return emotionTranslations[language as keyof typeof emotionTranslations]?.[emotion as keyof typeof emotionTranslations['en']] || emotion
+  }
+
   const dominantEmotions = Object.entries(emotions)
     .filter(([_, value]) => value > 0.2)
     .sort((a, b) => b[1] - a[1])
-    .map(([emotion, value]) => `${emotion}: ${(value * 100).toFixed(1)}%`)
+    .map(([emotion, value]) => `${getEmotionName(emotion)}: ${(value * 100).toFixed(1)}%`)
     .join(', ')
 
   console.log('Gemini API: Dominant emotions:', dominantEmotions)
