@@ -75,19 +75,47 @@ export default function ClientPage({ onBack }: ClientPageProps) {
         throw new Error(responseData.error || t('movies.error'))
       }
 
-      if (!responseData.movies || !Array.isArray(responseData.movies) || responseData.movies.length === 0) {
-        console.error('Invalid movies data:', JSON.stringify(responseData, null, 2))
-        throw new Error(t('movies.noMovies'))
+      // Validate movies array
+      if (!responseData.movies || !Array.isArray(responseData.movies)) {
+        console.error('Invalid movies data (not an array):', JSON.stringify(responseData, null, 2))
+        throw new Error(t('movies.error'))
       }
 
-      if (!responseData.emotion) {
-        console.error('Missing emotion data:', JSON.stringify(responseData, null, 2))
+      // Validate each movie object
+      const validMovies = responseData.movies.every((movie: Movie) => 
+        movie.title && 
+        movie.description && 
+        movie.matchReason && 
+        movie.posterUrl && 
+        Array.isArray(movie.streamingPlatforms)
+      )
+
+      if (!validMovies) {
+        console.error('Invalid movie object structure:', JSON.stringify(responseData.movies, null, 2))
+        throw new Error(t('movies.error'))
+      }
+
+      // Validate emotions object
+      if (!responseData.emotion || typeof responseData.emotion !== 'object') {
+        console.error('Invalid emotion data:', JSON.stringify(responseData, null, 2))
+        throw new Error(t('movies.error'))
+      }
+
+      const requiredEmotions = ['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness', 'surprise']
+      const hasAllEmotions = requiredEmotions.every(emotion => 
+        typeof responseData.emotion[emotion] === 'number'
+      )
+
+      if (!hasAllEmotions) {
+        console.error('Missing required emotions:', JSON.stringify(responseData.emotion, null, 2))
         throw new Error(t('movies.error'))
       }
 
       console.log('Setting movies:', JSON.stringify(responseData.movies, null, 2))
-      setMovies(responseData.movies)
       console.log('Setting emotions:', JSON.stringify(responseData.emotion, null, 2))
+      
+      // Only update state if we have valid data
+      setMovies(responseData.movies)
       setEmotions(responseData.emotion)
       setShowConfetti(true)
       analyzeCount.current += 1
@@ -96,8 +124,11 @@ export default function ClientPage({ onBack }: ClientPageProps) {
     } catch (error) {
       console.error('Error in handleImageCapture:', error)
       setError(error instanceof Error ? error.message : t('movies.error'))
-      setMovies([])
-      setEmotions(null)
+      // Only reset movies and emotions if we actually have an error
+      if (error instanceof Error) {
+        setMovies([])
+        setEmotions(null)
+      }
     } finally {
       setIsAnalyzing(false)
     }
