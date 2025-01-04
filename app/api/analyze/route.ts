@@ -4,6 +4,27 @@ import { getMovieSuggestions } from '@/lib/omdb-api'
 
 export async function POST(request: Request) {
   try {
+    // Verify environment variables
+    const envCheck = {
+      FACE_API_KEY: !!process.env.FACE_API_KEY,
+      FACE_API_SECRET: !!process.env.FACE_API_SECRET,
+      OMDB_API_KEY: !!process.env.OMDB_API_KEY
+    }
+    
+    console.log('API: Environment variables check:', envCheck)
+    
+    if (!envCheck.FACE_API_KEY || !envCheck.FACE_API_SECRET || !envCheck.OMDB_API_KEY) {
+      console.error('API: Missing environment variables:', 
+        Object.entries(envCheck)
+          .filter(([_, value]) => !value)
+          .map(([key]) => key)
+      )
+      return NextResponse.json(
+        { error: 'Server configuration error. Please contact support.' },
+        { status: 500 }
+      )
+    }
+
     console.log('API: Received request')
     const body = await request.json()
     console.log('API: Request body type:', typeof body)
