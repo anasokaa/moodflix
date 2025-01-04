@@ -20,7 +20,7 @@ export async function POST(request: Request) {
       if (!faceAnalysis) {
         console.error('No face detected in the image')
         return NextResponse.json(
-          { error: 'No face detected in the image' },
+          { error: 'No face detected. Please try again with a clearer photo.' },
           { status: 400 }
         )
       }
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     } else {
       console.error('Invalid request: no image or emotions provided')
       return NextResponse.json(
-        { error: 'Invalid request: must provide either image or emotions' },
+        { error: 'Please provide a photo to analyze.' },
         { status: 400 }
       )
     }
@@ -42,13 +42,21 @@ export async function POST(request: Request) {
     if (!movies || movies.length === 0) {
       console.error('No movie suggestions returned')
       return NextResponse.json(
-        { error: 'Failed to get movie suggestions' },
+        { error: 'Could not find movie suggestions. Please try again.' },
+        { status: 500 }
+      )
+    }
+
+    if (movies.length < 3) {
+      console.error('Not enough movie suggestions returned')
+      return NextResponse.json(
+        { error: 'Could not find enough movie suggestions. Please try again.' },
         { status: 500 }
       )
     }
 
     const response = {
-      movies,
+      movies: movies.slice(0, 3), // Ensure exactly 3 movies
       emotion: emotions
     }
     console.log('Sending response:', response)
@@ -56,7 +64,11 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error('Error in analyze route:', error)
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to analyze image' },
+      { 
+        error: error instanceof Error 
+          ? error.message 
+          : 'Something went wrong. Please try again.'
+      },
       { status: 500 }
     )
   }

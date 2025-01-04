@@ -92,8 +92,6 @@ export default function ClientPage({ onBack }: ClientPageProps) {
     } catch (error) {
       console.error('Error in handleImageCapture:', error)
       setError(error instanceof Error ? error.message : t('movies.error'))
-      setMovies([])
-      setEmotions(null)
     } finally {
       setIsAnalyzing(false)
     }
