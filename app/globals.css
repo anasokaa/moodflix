@@ -54,25 +54,27 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
 }
 
-/* Custom gradient backgrounds */
-.light .gradient-bg {
+.gradient-bg {
   background: radial-gradient(
-    ellipse 80% 80% at 50% -20%,
-    rgba(255, 182, 193, 0.2),
-    rgba(255, 255, 255, 0.9)
+    circle at top center,
+    hsl(var(--primary) / 0.15),
+    transparent 70%
+  ),
+  radial-gradient(
+    circle at bottom left,
+    hsl(var(--accent) / 0.15),
+    transparent 70%
+  ),
+  radial-gradient(
+    circle at bottom right,
+    hsl(var(--secondary) / 0.15),
+    transparent 70%
   );
-}
-
-.dark .gradient-bg {
-  background: radial-gradient(
-    ellipse 80% 80% at 50% -20%,
-    rgba(255, 61, 113, 0.1),
-    rgba(10, 10, 15, 0.9)
-  );
+  background-color: hsl(var(--background));
 }
 
 /* Smooth transitions for theme changes */

@@ -20,23 +20,19 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="system"
-      enableSystem
-      disableTransitionOnChange
-    >
-      <html lang="en" suppressHydrationWarning>
-        <head>
-          <title>MoodFlix</title>
-        </head>
-        <body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable)}>
+    <html lang="en" suppressHydrationWarning>
+      <body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable)}>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+        >
           <LanguageProvider>
             <LanguageSwitcher />
             {children}
           </LanguageProvider>
-        </body>
-      </html>
-    </ThemeProvider>
+        </ThemeProvider>
+      </body>
+    </html>
   )
 } 
