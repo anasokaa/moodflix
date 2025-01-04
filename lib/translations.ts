@@ -9,7 +9,10 @@ export const translations = {
       start: "Take a Selfie",
       retake: "Try Again",
       analyzing: "Analyzing your mood...",
-      error: "Camera error. Please try again!"
+      error: "Something went wrong. Please try again!",
+      permission: "Please allow camera access to continue",
+      inUse: "Camera is in use by another application. Please close it and try again.",
+      notFound: "No camera found. Please make sure your camera is connected."
     },
     movies: {
       title: "Your Movie Matches",
@@ -29,7 +32,10 @@ export const translations = {
       start: "Prenez un Selfie",
       retake: "Réessayer",
       analyzing: "Analyse de votre humeur...",
-      error: "Erreur de caméra. Veuillez réessayer !"
+      error: "Une erreur s'est produite. Veuillez réessayer !",
+      permission: "Veuillez autoriser l'accès à la caméra pour continuer",
+      inUse: "La caméra est utilisée par une autre application. Veuillez la fermer et réessayer.",
+      notFound: "Aucune caméra trouvée. Veuillez vérifier que votre caméra est connectée."
     },
     movies: {
       title: "Vos Films",
