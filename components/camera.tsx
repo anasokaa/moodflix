@@ -159,58 +159,54 @@ export function Camera({ onCapture }: CameraProps) {
   }, [onCapture, stopStream])
 
   return (
-    <div className="space-y-4 mt-8">
-      <div className="relative aspect-video w-full max-w-2xl mx-auto rounded-lg overflow-hidden bg-muted">
+    <div className="relative w-full max-w-2xl mx-auto">
+      <div className="relative aspect-video rounded-lg overflow-hidden bg-muted">
         <video
           ref={videoRef}
-          autoPlay
+          className="w-full h-full object-cover"
           playsInline
           muted
-          className="absolute inset-0 w-full h-full object-cover"
         />
-        <AnimatePresence mode="wait">
-          {!isStreaming && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="absolute inset-0 flex items-center justify-center bg-muted"
+        
+        <div className="absolute inset-0 flex items-center justify-center">
+          {error ? (
+            <div className="text-center p-4 bg-background/80 backdrop-blur-sm rounded-lg">
+              <p className="text-destructive mb-4">{error}</p>
+              <Button onClick={startCamera} variant="secondary">
+                <CameraIcon className="mr-2 h-4 w-4" />
+                {t('camera.tryAgain')}
+              </Button>
+            </div>
+          ) : !isStreaming ? (
+            <Button 
+              onClick={startCamera} 
+              size="lg"
+              className="text-lg"
             >
-              <CameraIcon className="w-16 h-16 text-muted-foreground" />
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-
-      <div className="flex justify-center">
-        <Button
-          size="lg"
-          onClick={isStreaming ? captureImage : startCamera}
-          className="gap-2"
-        >
-          {isStreaming ? (
-            <>
-              <Aperture className="w-5 h-5" />
-              {t('camera.capture')}
-            </>
+              <CameraIcon className="mr-2 h-5 w-5" />
+              {t('camera.letMeSeeYourSmile')}
+            </Button>
           ) : (
-            <>
-              <CameraIcon className="w-5 h-5" />
-              {t('camera.start')}
-            </>
+            <AnimatePresence mode="wait">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+              >
+                <Button 
+                  onClick={captureImage}
+                  size="lg"
+                  variant="secondary"
+                  className="text-lg bg-background/80 backdrop-blur-sm hover:bg-background/90"
+                >
+                  <Aperture className="mr-2 h-5 w-5" />
+                  {t('camera.captureTheMoment')}
+                </Button>
+              </motion.div>
+            </AnimatePresence>
           )}
-        </Button>
+        </div>
       </div>
-
-      {error && (
-        <motion.p
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-sm text-destructive text-center"
-        >
-          {error}
-        </motion.p>
-      )}
     </div>
   )
 } 

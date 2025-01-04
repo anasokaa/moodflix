@@ -50,10 +50,14 @@ export default function ClientPage({ onBack }: ClientPageProps) {
 
   const handleImageCapture = async (imageData: string) => {
     try {
-      setIsAnalyzing(true)
+      // Reset states at the start
+      setMovies([])
+      setEmotions(null)
       setError(null)
+      setIsAnalyzing(true)
+      setShowConfetti(false)
       
-      console.log('Starting image analysis...')
+      console.log('Starting new image analysis...')
       console.log('Image data length:', imageData.length)
       
       const response = await fetch('/api/analyze', {
@@ -65,70 +69,48 @@ export default function ClientPage({ onBack }: ClientPageProps) {
       })
 
       console.log('Response status:', response.status)
-      console.log('Response headers:', Object.fromEntries(response.headers.entries()))
-      
       const responseData = await response.json()
       console.log('Response data:', JSON.stringify(responseData, null, 2))
 
       if (!response.ok) {
-        console.error('API error:', responseData)
         throw new Error(responseData.error || t('movies.error'))
       }
 
-      // Validate movies array
-      if (!responseData.movies || !Array.isArray(responseData.movies)) {
-        console.error('Invalid movies data (not an array):', JSON.stringify(responseData, null, 2))
+      // Validate response structure
+      if (!responseData || typeof responseData !== 'object') {
+        console.error('Invalid response format:', responseData)
         throw new Error(t('movies.error'))
       }
 
-      // Validate each movie object
-      const validMovies = responseData.movies.every((movie: Movie) => 
-        movie.title && 
-        movie.description && 
-        movie.matchReason && 
-        movie.posterUrl && 
-        Array.isArray(movie.streamingPlatforms)
-      )
-
-      if (!validMovies) {
-        console.error('Invalid movie object structure:', JSON.stringify(responseData.movies, null, 2))
+      // Validate and extract movies
+      const movies = responseData.movies
+      if (!Array.isArray(movies) || movies.length < 3) {
+        console.error('Invalid movies array:', movies)
         throw new Error(t('movies.error'))
       }
 
-      // Validate emotions object
-      if (!responseData.emotion || typeof responseData.emotion !== 'object') {
-        console.error('Invalid emotion data:', JSON.stringify(responseData, null, 2))
+      // Validate and extract emotions
+      const emotions = responseData.emotion
+      if (!emotions || typeof emotions !== 'object') {
+        console.error('Invalid emotions object:', emotions)
         throw new Error(t('movies.error'))
       }
 
-      const requiredEmotions = ['anger', 'disgust', 'fear', 'happiness', 'neutral', 'sadness', 'surprise']
-      const hasAllEmotions = requiredEmotions.every(emotion => 
-        typeof responseData.emotion[emotion] === 'number'
-      )
+      // Log the validated data
+      console.log('Validated movies:', JSON.stringify(movies, null, 2))
+      console.log('Validated emotions:', JSON.stringify(emotions, null, 2))
 
-      if (!hasAllEmotions) {
-        console.error('Missing required emotions:', JSON.stringify(responseData.emotion, null, 2))
-        throw new Error(t('movies.error'))
-      }
-
-      console.log('Setting movies:', JSON.stringify(responseData.movies, null, 2))
-      console.log('Setting emotions:', JSON.stringify(responseData.emotion, null, 2))
-      
-      // Only update state if we have valid data
-      setMovies(responseData.movies)
-      setEmotions(responseData.emotion)
+      // Update state in a specific order
+      setEmotions(emotions)
+      setMovies(movies)
       setShowConfetti(true)
       analyzeCount.current += 1
-      
+
+      // Schedule confetti cleanup
       setTimeout(() => setShowConfetti(false), 3000)
     } catch (error) {
       console.error('Error in handleImageCapture:', error)
       setError(error instanceof Error ? error.message : t('movies.error'))
-      // Only reset movies and emotions if we actually have an error
-      if (error instanceof Error) {
-        setMovies([])
-        setEmotions(null)
-      }
     } finally {
       setIsAnalyzing(false)
     }

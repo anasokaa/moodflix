@@ -40,6 +40,11 @@ export const translations = {
       generateMore: "More Movies Please! 🎬",
       startCamera: "Snap a Selfie! 📸",
       capture: "Capture the Mood! ✨"
+    },
+    camera: {
+      letMeSeeYourSmile: "Let Me See Your Smile! 📸",
+      captureTheMoment: "Capture the Magic! ✨",
+      tryAgain: "Let's Try Again! 🔄"
     }
   },
   fr: {
@@ -81,6 +86,11 @@ export const translations = {
       generateMore: "Plus de Films! 🎬",
       startCamera: "Selfie Time! 📸",
       capture: "Capturez l'Instant! ✨"
+    },
+    camera: {
+      letMeSeeYourSmile: "Montrez-moi Votre Sourire! 📸",
+      captureTheMoment: "Capturez la Magie! ✨",
+      tryAgain: "Réessayons! 🔄"
     }
   },
   es: {
@@ -122,6 +132,11 @@ export const translations = {
       generateMore: "¡Más Películas! 🎬",
       startCamera: "¡Hora del Selfie! 📸",
       capture: "¡Captura el Momento! ✨"
+    },
+    camera: {
+      letMeSeeYourSmile: "¡Muéstrame Tu Sonrisa! 📸",
+      captureTheMoment: "¡Captura la Magia! ✨",
+      tryAgain: "¡Intentémoslo de Nuevo! 🔄"
     }
   }
 } 
