@@ -6,16 +6,20 @@ export async function POST(request: Request) {
   try {
     console.log('Received analyze request')
     const body = await request.json()
+    console.log('Request body type:', typeof body)
+    console.log('Request body keys:', Object.keys(body))
+    
     let emotions
 
     if (body.emotions) {
-      // This is a regeneration request
-      console.log('Regenerating suggestions with existing emotions:', body.emotions)
+      console.log('Regenerating suggestions with existing emotions:', JSON.stringify(body.emotions, null, 2))
       emotions = body.emotions
     } else if (body.image) {
-      // This is a new analysis request
+      console.log('Received image data length:', body.image.length)
       console.log('Analyzing face with Face++ API...')
+      
       const faceAnalysis = await analyzeFace(body.image)
+      console.log('Face analysis result:', faceAnalysis ? JSON.stringify(faceAnalysis, null, 2) : 'null')
       
       if (!faceAnalysis) {
         console.error('No face detected in the image')
@@ -25,19 +29,20 @@ export async function POST(request: Request) {
         )
       }
 
-      console.log('Face analysis successful:', faceAnalysis)
+      console.log('Face analysis successful:', JSON.stringify(faceAnalysis, null, 2))
       emotions = faceAnalysis.emotion
     } else {
       console.error('Invalid request: no image or emotions provided')
+      console.error('Request body:', JSON.stringify(body, null, 2))
       return NextResponse.json(
         { error: 'Please provide a photo to analyze.' },
         { status: 400 }
       )
     }
 
-    console.log('Getting movie suggestions...')
+    console.log('Getting movie suggestions with emotions:', JSON.stringify(emotions, null, 2))
     const movies = await getMovieSuggestions(emotions)
-    console.log('Got movie suggestions:', movies)
+    console.log('Got movie suggestions:', JSON.stringify(movies, null, 2))
 
     if (!movies || movies.length === 0) {
       console.error('No movie suggestions returned')
@@ -48,7 +53,8 @@ export async function POST(request: Request) {
     }
 
     if (movies.length < 3) {
-      console.error('Not enough movie suggestions returned')
+      console.error('Not enough movie suggestions returned:', movies.length)
+      console.error('Movies:', JSON.stringify(movies, null, 2))
       return NextResponse.json(
         { error: 'Could not find enough movie suggestions. Please try again.' },
         { status: 500 }
@@ -56,13 +62,14 @@ export async function POST(request: Request) {
     }
 
     const response = {
-      movies: movies.slice(0, 3), // Ensure exactly 3 movies
+      movies: movies.slice(0, 3),
       emotion: emotions
     }
-    console.log('Sending response:', response)
+    console.log('Sending response:', JSON.stringify(response, null, 2))
     return NextResponse.json(response)
   } catch (error) {
     console.error('Error in analyze route:', error)
+    console.error('Error details:', error instanceof Error ? error.stack : 'Unknown error')
     return NextResponse.json(
       { 
         error: error instanceof Error 

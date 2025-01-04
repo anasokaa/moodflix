@@ -54,6 +54,8 @@ export default function ClientPage({ onBack }: ClientPageProps) {
       setError(null)
       
       console.log('Starting image analysis...')
+      console.log('Image data length:', imageData.length)
+      
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
@@ -63,8 +65,10 @@ export default function ClientPage({ onBack }: ClientPageProps) {
       })
 
       console.log('Response status:', response.status)
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()))
+      
       const responseData = await response.json()
-      console.log('Response data:', responseData)
+      console.log('Response data:', JSON.stringify(responseData, null, 2))
 
       if (!response.ok) {
         console.error('API error:', responseData)
@@ -72,18 +76,18 @@ export default function ClientPage({ onBack }: ClientPageProps) {
       }
 
       if (!responseData.movies || !Array.isArray(responseData.movies) || responseData.movies.length === 0) {
-        console.error('Invalid movies data:', responseData)
+        console.error('Invalid movies data:', JSON.stringify(responseData, null, 2))
         throw new Error(t('movies.noMovies'))
       }
 
       if (!responseData.emotion) {
-        console.error('Missing emotion data:', responseData)
+        console.error('Missing emotion data:', JSON.stringify(responseData, null, 2))
         throw new Error(t('movies.error'))
       }
 
-      console.log('Setting movies:', responseData.movies)
+      console.log('Setting movies:', JSON.stringify(responseData.movies, null, 2))
       setMovies(responseData.movies)
-      console.log('Setting emotions:', responseData.emotion)
+      console.log('Setting emotions:', JSON.stringify(responseData.emotion, null, 2))
       setEmotions(responseData.emotion)
       setShowConfetti(true)
       analyzeCount.current += 1
@@ -92,6 +96,8 @@ export default function ClientPage({ onBack }: ClientPageProps) {
     } catch (error) {
       console.error('Error in handleImageCapture:', error)
       setError(error instanceof Error ? error.message : t('movies.error'))
+      setMovies([])
+      setEmotions(null)
     } finally {
       setIsAnalyzing(false)
     }
