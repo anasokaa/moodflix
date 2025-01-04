@@ -6,6 +6,16 @@ import { Badge } from "@/components/ui/badge"
 import { motion, AnimatePresence } from "framer-motion"
 import { Heart, Share2, ExternalLink } from 'lucide-react'
 
+interface EmotionData {
+  anger: number
+  disgust: number
+  fear: number
+  happiness: number
+  neutral: number
+  sadness: number
+  surprise: number
+}
+
 interface MovieSuggestionsProps {
   movies: Array<{
     title: string
@@ -14,6 +24,8 @@ interface MovieSuggestionsProps {
     posterUrl: string
     streamingPlatforms: string[]
   }>
+  emotions?: EmotionData
+  error?: string
   onGenerateMore: () => void
 }
 

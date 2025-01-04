@@ -1,17 +1,10 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useCallback, useState } from 'react'
 import { Camera } from '@/components/camera'
 import { MovieSuggestions } from '@/components/movie-suggestions'
+import { motion } from 'framer-motion'
 import { useLanguage } from '@/lib/language-context'
-import { AnimatedContainer } from '@/components/ui/animated-container'
-import { MoodProgress } from '@/components/ui/mood-progress'
-import { Confetti } from '@/components/ui/confetti'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Button } from '@/components/ui/button'
-import { ArrowLeft } from 'lucide-react'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { LanguageSelector } from '@/components/language-selector'
 
 interface Movie {
   title: string
@@ -31,172 +24,103 @@ interface EmotionData {
   surprise: number
 }
 
-interface ClientPageProps {
-  onBack: () => void
-}
-
-export default function ClientPage({ onBack }: ClientPageProps) {
-  const { t, currentLanguage } = useLanguage()
-  const [isAnalyzing, setIsAnalyzing] = useState(false)
-  const [showConfetti, setShowConfetti] = useState(false)
+export default function ClientPage() {
+  const [isLoading, setIsLoading] = useState(false)
   const [movies, setMovies] = useState<Movie[]>([])
-  const [emotions, setEmotions] = useState<EmotionData | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const analyzeCount = useRef(0)
+  const [emotions, setEmotions] = useState<EmotionData>()
+  const [error, setError] = useState<string>()
+  const { t } = useLanguage()
 
-  const handleImageCapture = async (imageData: string) => {
+  const handleImageCapture = useCallback(async (imageData: string) => {
     try {
-      console.log('Starting image capture process...')
-      setIsAnalyzing(true)
-      setError(null)
-      
-      console.log('Sending image to API...')
+      setIsLoading(true)
+      setError(undefined)
+
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          image: imageData,
-          language: currentLanguage
-        }),
+        body: JSON.stringify({ imageData }),
       })
 
-      console.log('API Response Status:', response.status)
-      const result = await response.json()
-      console.log('API Response:', result)
-
       if (!response.ok) {
-        console.error('API error:', result)
-        throw new Error(result.error || t('movies.error'))
+        throw new Error(t('movies.error'))
       }
 
-      console.log('Setting movies:', result.movies)
-      console.log('Setting emotions:', result.emotion)
-      
-      setMovies(result.movies)
-      setEmotions(result.emotion)
-      setShowConfetti(true)
-      analyzeCount.current += 1
-      setTimeout(() => setShowConfetti(false), 3000)
-    } catch (error) {
-      console.error('Error in handleImageCapture:', error)
-      setError(error instanceof Error ? error.message : t('movies.error'))
-      setMovies([])
-      setEmotions(null)
-    } finally {
-      setIsAnalyzing(false)
-    }
-  }
+      const data = await response.json()
+      if (!data.movies || data.movies.length === 0) {
+        throw new Error(t('movies.error'))
+      }
 
-  const handleGenerateMore = async () => {
-    if (!emotions) return
-    
+      setMovies(data.movies)
+      setEmotions(data.emotions)
+    } catch (err) {
+      console.error('Error analyzing image:', err)
+      setError(err instanceof Error ? err.message : t('movies.error'))
+    } finally {
+      setIsLoading(false)
+    }
+  }, [t])
+
+  const handleGenerateMore = useCallback(async () => {
     try {
-      setIsAnalyzing(true)
-      setError(null)
-      
+      setIsLoading(true)
+      setError(undefined)
+
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          image: 'regenerate',
-          emotions,
-          previousMovies: movies.map(m => m.title),
-          language: currentLanguage
-        })
+        body: JSON.stringify({ emotions }),
       })
 
-      const result = await response.json()
-
       if (!response.ok) {
-        throw new Error(result.error || t('movies.error'))
+        throw new Error(t('movies.error'))
       }
 
-      setMovies(result.movies)
-      setShowConfetti(true)
-      setTimeout(() => setShowConfetti(false), 3000)
-    } catch (error) {
-      console.error('Error in handleGenerateMore:', error)
-      setError(error instanceof Error ? error.message : t('movies.error'))
-    } finally {
-      setIsAnalyzing(false)
-    }
-  }
+      const data = await response.json()
+      if (!data.movies || data.movies.length === 0) {
+        throw new Error(t('movies.error'))
+      }
 
-  const handleTryAgain = () => {
-    setMovies([])
-    setEmotions(null)
-    setError(null)
-    setShowConfetti(false)
-    analyzeCount.current = 0
-  }
+      setMovies(data.movies)
+    } catch (err) {
+      console.error('Error generating more movies:', err)
+      setError(err instanceof Error ? err.message : t('movies.error'))
+    } finally {
+      setIsLoading(false)
+    }
+  }, [emotions, t])
 
   return (
-    <AnimatePresence mode="wait">
-      <div className="relative min-h-screen w-full">
-        <div className="fixed top-4 right-4 flex items-center gap-2 z-[100]">
-          <LanguageSelector />
-          <ThemeToggle />
-        </div>
+    <div className="min-h-screen p-6 space-y-8">
+      <motion.h1
+        className="text-3xl md:text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        MoodFlix ✨
+      </motion.h1>
 
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onBack}
-          className="fixed top-4 left-4 z-50 rounded-full bg-background/80 backdrop-blur-sm"
-        >
-          <ArrowLeft className="h-6 w-6" />
-        </Button>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="max-w-4xl mx-auto space-y-8"
+      >
+        <Camera onCapture={handleImageCapture} isLoading={isLoading} />
 
-        <motion.h1 
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 text-3xl font-bold bg-gradient-to-r from-pink-500 to-violet-500 text-transparent bg-clip-text"
-        >
-          MoodFlix
-        </motion.h1>
-
-        <Confetti trigger={showConfetti} />
-
-        <div className="container mx-auto px-4 py-20 max-w-7xl min-h-screen flex flex-col items-center justify-center">
-          {isAnalyzing ? (
-            <MoodProgress
-              message={analyzeCount.current === 0 ? t('loading.analyzing') : t('loading.regenerating')}
-              isLoading={true}
-            />
-          ) : movies.length > 0 ? (
-            <AnimatedContainer>
-              <MovieSuggestions
-                movies={movies}
-                emotions={emotions || undefined}
-                error={error || undefined}
-                onGenerateMore={handleGenerateMore}
-              />
-              <motion.div 
-                className="mt-8 flex justify-center"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-              >
-                <Button
-                  onClick={handleTryAgain}
-                  className="gap-2"
-                  variant="outline"
-                  size="lg"
-                >
-                  {t('buttons.tryAgain')}
-                </Button>
-              </motion.div>
-            </AnimatedContainer>
-          ) : (
-            <AnimatedContainer>
-              <Camera onCapture={handleImageCapture} />
-            </AnimatedContainer>
-          )}
-        </div>
-      </div>
-    </AnimatePresence>
+        {(movies.length > 0 || error) && (
+          <MovieSuggestions
+            movies={movies}
+            emotions={emotions}
+            error={error}
+            onGenerateMore={handleGenerateMore}
+          />
+        )}
+      </motion.div>
+    </div>
   )
 } 
