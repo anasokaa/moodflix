@@ -137,6 +137,11 @@ export default function ClientPage({ onBack }: ClientPageProps) {
   return (
     <AnimatePresence mode="wait">
       <div className="relative min-h-screen w-full">
+        <div className="fixed top-4 right-4 flex items-center gap-2 z-50">
+          <LanguageSelector />
+          <ThemeToggle />
+        </div>
+
         <Button
           variant="ghost"
           size="icon"
@@ -145,9 +150,6 @@ export default function ClientPage({ onBack }: ClientPageProps) {
         >
           <ArrowLeft className="h-6 w-6" />
         </Button>
-
-        <ThemeToggle />
-        <LanguageSelector />
 
         <Confetti trigger={showConfetti} />
 

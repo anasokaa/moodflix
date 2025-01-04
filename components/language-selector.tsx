@@ -22,18 +22,18 @@ export function LanguageSelector() {
         <Button
           variant="ghost"
           size="icon"
-          className="fixed top-4 right-14 z-50 rounded-full bg-background/80 backdrop-blur-sm"
+          className="rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90"
         >
           <Languages className="h-5 w-5" />
           <span className="sr-only">{t('language.select')}</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className="bg-background/95 backdrop-blur-sm">
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang}
             onClick={() => setLanguage(lang)}
-            className={currentLanguage === lang ? 'bg-accent' : ''}
+            className={`${currentLanguage === lang ? 'bg-primary/20' : ''} cursor-pointer hover:bg-primary/10`}
           >
             {t(`language.${lang}`)}
           </DropdownMenuItem>
