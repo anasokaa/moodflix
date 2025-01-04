@@ -1,33 +1,57 @@
 'use client'
 
 import { useState } from 'react'
-import ClientPage from './client-page'
+import { AnimatePresence, motion } from 'framer-motion'
 import { WelcomeScreen } from '@/components/welcome-screen'
-import { motion, AnimatePresence } from 'framer-motion'
-import { LanguageSelector } from '@/components/language-selector'
+import ClientPage from './client-page'
 import { ThemeToggle } from '@/components/theme-toggle'
+import { LanguageSelector } from '@/components/language-selector'
 
 export default function Home() {
   const [started, setStarted] = useState(false)
 
   return (
-    <div className="relative min-h-screen w-full bg-gradient-to-b from-background to-background/50">
-      {/* Controls - Fixed position with high z-index */}
-      <div className="fixed top-4 right-4 flex items-center gap-2 z-[100]">
+    <main className="relative min-h-screen">
+      {/* Fixed controls */}
+      <motion.div 
+        className="fixed top-4 right-4 flex items-center gap-2 z-50"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3 }}
+      >
         <LanguageSelector />
         <ThemeToggle />
-      </div>
+      </motion.div>
 
-      {/* Content */}
-      <div className="relative z-10">
-        <AnimatePresence mode="wait">
-          {started ? (
-            <ClientPage onBack={() => setStarted(false)} />
-          ) : (
+      <AnimatePresence mode="wait">
+        {started ? (
+          <motion.div
+            key="client"
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+          >
+            <ClientPage />
+            <motion.button
+              className="fixed top-4 left-4 z-50 p-2 rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90 transition-colors"
+              onClick={() => setStarted(false)}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+            >
+              ← Back
+            </motion.button>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="welcome"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+          >
             <WelcomeScreen onStart={() => setStarted(true)} />
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </main>
   )
 } 
