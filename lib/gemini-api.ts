@@ -39,7 +39,13 @@ export async function getMovieSuggestions(emotions: EmotionData, language: strin
   console.log('Gemini API: Dominant emotions:', dominantEmotions)
 
   const languageInstructions = language === 'en' ? '' : `
-Important: Provide all text content (descriptions and match reasons) in ${language === 'fr' ? 'French' : 'Spanish'}. Keep movie titles in their original form.`
+Important: You MUST provide all text content (descriptions and match reasons) in ${language === 'fr' ? 'French' : 'Spanish'}. Keep movie titles in their original form, but translate everything else.
+
+For French translations, ensure:
+- Use proper French grammar and punctuation
+- Maintain a friendly and engaging tone
+- Use appropriate French expressions
+- Keep technical terms and movie titles in their original form`
 
   const prompt = `You are CineMood, an expert film curator with deep knowledge of cinema across all genres, cultures, and eras. Your mission is to recommend the perfect movies based on this emotional analysis: ${dominantEmotions}${languageInstructions}
 
@@ -53,6 +59,7 @@ Consider these advanced criteria:
    - Include at least one movie from the last 5 years
    - Mix of mainstream hits and hidden gems
    - No obscure or hard-to-find films
+   - Ensure movies are well-known and easily accessible
 
 2. Emotional Resonance:
    - How the film's themes and tone align with or complement the viewer's emotional state
@@ -69,13 +76,14 @@ Consider these advanced criteria:
    - Movies should be available on major streaming platforms
    - Focus on films with wide release or strong streaming presence
    - Avoid region-locked or limited-release films
+   - Include popular and recognizable titles
 
 CRITICAL: Respond ONLY with a JSON array of EXACTLY 3 DIFFERENT movie objects. Each object must have:
 {
-  "title": "Exact movie title - e.g., 'Inside Out'",
+  "title": "Exact movie title as known internationally - e.g., 'Inside Out', 'The Shawshank Redemption'",
   "description": "A vivid, engaging plot summary that captures the essence of the film (2-3 sentences)",
   "matchReason": "A psychologically insightful explanation of why this film resonates with the current emotional state (1-2 impactful sentences)",
-  "streamingPlatforms": ["Array of major platforms", "Netflix", "Amazon Prime", "Disney+", "HBO Max", "Hulu", "Apple TV+"]
+  "streamingPlatforms": ["Netflix", "Amazon Prime", "Disney+", "HBO Max", "Hulu", "Apple TV+"]
 }
 
 Return ONLY the JSON array. No additional text or explanations.`
@@ -103,12 +111,16 @@ Return ONLY the JSON array. No additional text or explanations.`
         return []
       }
 
-      // Validate each suggestion has required properties
+      // Validate each suggestion has required properties and title is not empty
       const validSuggestions = suggestions.filter(suggestion => 
         suggestion.title && 
+        suggestion.title.trim() !== '' &&
         suggestion.description && 
+        suggestion.description.trim() !== '' &&
         suggestion.matchReason && 
-        Array.isArray(suggestion.streamingPlatforms)
+        suggestion.matchReason.trim() !== '' &&
+        Array.isArray(suggestion.streamingPlatforms) &&
+        suggestion.streamingPlatforms.length > 0
       )
 
       if (validSuggestions.length === 0) {
@@ -124,7 +136,7 @@ Return ONLY the JSON array. No additional text or explanations.`
         validSuggestions.map(async (movie) => {
           try {
             const title = movie.title.replace(/\s*\(\d{4}\)$/, '') // Remove year from title
-            const details = await getMovieDetails(title, 'Drama', 'neutral') // Genre and emotion are placeholders
+            const details = await getMovieDetails(title)
             return {
               ...movie,
               posterUrl: details?.posterUrl || '/movie-placeholder.jpg'
@@ -139,8 +151,15 @@ Return ONLY the JSON array. No additional text or explanations.`
         })
       )
 
-      console.log('Gemini API: Final suggestions with details:', moviesWithDetails)
-      return moviesWithDetails
+      // Ensure we have exactly 3 movies
+      const finalSuggestions = moviesWithDetails.slice(0, 3)
+      if (finalSuggestions.length < 3) {
+        console.error('Gemini API: Not enough valid suggestions')
+        return []
+      }
+
+      console.log('Gemini API: Final suggestions with details:', finalSuggestions)
+      return finalSuggestions
     } catch (parseError) {
       console.error('Gemini API: Error parsing response:', parseError)
       console.error('Gemini API: Raw response:', text)

@@ -109,7 +109,7 @@ export async function getMovieSuggestions(emotions: EmotionData): Promise<Movie[
   }
 }
 
-export async function getMovieDetails(title: string, genre: string, emotion: string): Promise<Movie | null> {
+export async function getMovieDetails(title: string): Promise<Movie | null> {
   const apiKey = process.env.OMDB_API_KEY
   if (!apiKey) {
     console.error('OMDB API: API key not configured')
@@ -132,18 +132,16 @@ export async function getMovieDetails(title: string, genre: string, emotion: str
     const data: OMDBResponse = await response.json()
     console.log('OMDB API: Response data:', data)
     
-    if (data.Response === 'True') {
-      const movie = {
+    if (data.Response === 'True' && data.Poster && data.Poster !== 'N/A') {
+      return {
+        posterUrl: data.Poster,
         title: data.Title,
-        description: data.Plot,
-        matchReason: `This ${genre.toLowerCase()} movie matches your ${emotion} mood`,
-        posterUrl: data.Poster !== 'N/A' ? data.Poster : '/movie-placeholder.jpg',
-        streamingPlatforms: ['Netflix', 'Amazon Prime', 'Disney+'] // Placeholder
+        description: '', // Will be provided by Gemini
+        matchReason: '', // Will be provided by Gemini
+        streamingPlatforms: [] // Will be provided by Gemini
       }
-      console.log('OMDB API: Successfully processed movie:', movie)
-      return movie
     } else {
-      console.error('OMDB API: Movie not found:', data.Error)
+      console.error('OMDB API: Movie not found or no poster:', data.Error)
       return null
     }
   } catch (error) {
