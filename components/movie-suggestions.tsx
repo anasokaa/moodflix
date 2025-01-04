@@ -50,7 +50,7 @@ const container = {
   show: {
     opacity: 1,
     transition: {
-      staggerChildren: 0.2
+      staggerChildren: 0.1
     }
   }
 }
@@ -60,7 +60,7 @@ const item = {
   show: { y: 0, opacity: 1 }
 }
 
-export function MovieSuggestions({ movies, onGenerateMore }: MovieSuggestionsProps) {
+export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: MovieSuggestionsProps) {
   const [favorites, setFavorites] = useState<string[]>([])
 
   const toggleFavorite = (title: string) => {
@@ -90,8 +90,20 @@ export function MovieSuggestions({ movies, onGenerateMore }: MovieSuggestionsPro
     }
   }
 
+  if (error) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-md mx-auto p-6 text-center space-y-4"
+      >
+        <p className="text-lg text-destructive">{error}</p>
+      </motion.div>
+    )
+  }
+
   return (
-    <div className="w-full max-w-4xl mx-auto px-4">
+    <div className="w-full max-w-6xl mx-auto px-4">
       <motion.div
         variants={container}
         initial="hidden"
@@ -99,27 +111,18 @@ export function MovieSuggestions({ movies, onGenerateMore }: MovieSuggestionsPro
         className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
       >
         <AnimatePresence mode="popLayout">
-          {movies.map((movie, index) => (
+          {movies.map((movie) => (
             <motion.div 
               key={movie.title} 
               variants={item}
               layout
               layoutId={movie.title}
             >
-              <Card className="h-full group transform hover:scale-105 transition-all duration-300 bg-card/50 backdrop-blur-sm border-2 hover:border-primary relative overflow-hidden">
-                {/* Movie poster overlay */}
-                <div className="absolute inset-0 opacity-0 group-hover:opacity-10 transition-opacity duration-300">
-                  <img 
-                    src={movie.posterUrl} 
-                    alt={movie.title}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                
-                <CardHeader>
+              <Card className="h-full group hover:shadow-lg transition-all duration-300 bg-card/50 backdrop-blur-sm border border-primary/10">
+                <CardHeader className="space-y-2">
                   <div className="flex justify-between items-start">
                     <CardTitle className="text-xl font-bold text-primary">
-                      {movie.title} ✨
+                      {movie.title}
                     </CardTitle>
                     <div className="flex gap-2">
                       <motion.button
@@ -144,13 +147,13 @@ export function MovieSuggestions({ movies, onGenerateMore }: MovieSuggestionsPro
                       </motion.button>
                     </div>
                   </div>
-                  <CardDescription className="text-sm mt-2 line-clamp-2">
+                  <CardDescription className="text-sm line-clamp-2">
                     {movie.description}
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-sm mb-4 italic text-muted-foreground">
-                    "{movie.matchReason}"
+                <CardContent className="space-y-4">
+                  <p className="text-sm italic text-muted-foreground">
+                    {movie.matchReason}
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {movie.streamingPlatforms.map((platform) => (
@@ -178,18 +181,12 @@ export function MovieSuggestions({ movies, onGenerateMore }: MovieSuggestionsPro
       </motion.div>
       
       <motion.button
-        whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(var(--primary), 0.3)" }}
+        whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={onGenerateMore}
-        className="mt-8 mx-auto block px-8 py-4 rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-300 relative overflow-hidden group"
+        className="mt-12 mx-auto block px-8 py-3 rounded-full bg-primary text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300"
       >
-        <span className="relative z-10">✨ Show Me More Movies! 🍿</span>
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-r from-primary/80 to-purple-600/80"
-          initial={{ opacity: 0, scale: 0.8 }}
-          whileHover={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.2 }}
-        />
+        ✨ More Movies! 🍿
       </motion.button>
     </div>
   )

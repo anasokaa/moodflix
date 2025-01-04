@@ -73,7 +73,7 @@ export default function ClientPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ emotions }),
+        body: JSON.stringify({ emotions, previousMovies: movies.map(m => m.title) }),
       })
 
       if (!response.ok) {
@@ -92,12 +92,12 @@ export default function ClientPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [emotions, t])
+  }, [emotions, movies, t])
 
   return (
-    <div className="min-h-screen p-6 space-y-8">
+    <div className="min-h-screen p-6 space-y-12">
       <motion.h1
-        className="text-3xl md:text-4xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600"
+        className="text-4xl md:text-5xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
@@ -108,7 +108,7 @@ export default function ClientPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
-        className="max-w-4xl mx-auto space-y-8"
+        className="max-w-6xl mx-auto space-y-12"
       >
         <Camera onCapture={handleImageCapture} isLoading={isLoading} />
 
