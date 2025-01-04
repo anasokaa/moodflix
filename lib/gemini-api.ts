@@ -134,7 +134,7 @@ Return ONLY the JSON array. No additional text or explanations.`
             const details = await getMovieDetails(title, 'Drama', 'neutral') // Genre and emotion are placeholders
             return {
               ...movie,
-              posterUrl: details.posterUrl
+              posterUrl: details?.posterUrl || '/movie-placeholder.jpg'
             }
           } catch (error) {
             console.error(`Error getting details for ${movie.title}:`, error)
