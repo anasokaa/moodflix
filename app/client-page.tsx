@@ -30,11 +30,6 @@ interface EmotionData {
   surprise: number
 }
 
-interface AnalysisResult {
-  movies: Movie[]
-  emotion: EmotionData
-}
-
 interface ClientPageProps {
   onBack: () => void
 }
@@ -50,15 +45,8 @@ export default function ClientPage({ onBack }: ClientPageProps) {
 
   const handleImageCapture = async (imageData: string) => {
     try {
-      // Reset states at the start
-      setMovies([])
-      setEmotions(null)
-      setError(null)
       setIsAnalyzing(true)
-      setShowConfetti(false)
-      
-      console.log('Starting new image analysis...')
-      console.log('Image data length:', imageData.length)
+      setError(null)
       
       const response = await fetch('/api/analyze', {
         method: 'POST',
@@ -68,45 +56,15 @@ export default function ClientPage({ onBack }: ClientPageProps) {
         body: JSON.stringify({ image: imageData }),
       })
 
-      console.log('Response status:', response.status)
-      const responseData = await response.json()
-      console.log('Response data:', JSON.stringify(responseData, null, 2))
+      const result = await response.json()
 
       if (!response.ok) {
-        throw new Error(responseData.error || t('movies.error'))
+        throw new Error(result.error || t('movies.error'))
       }
 
-      // Validate response structure
-      if (!responseData || typeof responseData !== 'object') {
-        console.error('Invalid response format:', responseData)
-        throw new Error(t('movies.error'))
-      }
-
-      // Validate and extract movies
-      const movies = responseData.movies
-      if (!Array.isArray(movies) || movies.length < 3) {
-        console.error('Invalid movies array:', movies)
-        throw new Error(t('movies.error'))
-      }
-
-      // Validate and extract emotions
-      const emotions = responseData.emotion
-      if (!emotions || typeof emotions !== 'object') {
-        console.error('Invalid emotions object:', emotions)
-        throw new Error(t('movies.error'))
-      }
-
-      // Log the validated data
-      console.log('Validated movies:', JSON.stringify(movies, null, 2))
-      console.log('Validated emotions:', JSON.stringify(emotions, null, 2))
-
-      // Update state in a specific order
-      setEmotions(emotions)
-      setMovies(movies)
+      setMovies(result.movies)
+      setEmotions(result.emotion)
       setShowConfetti(true)
-      analyzeCount.current += 1
-
-      // Schedule confetti cleanup
       setTimeout(() => setShowConfetti(false), 3000)
     } catch (error) {
       console.error('Error in handleImageCapture:', error)
@@ -123,7 +81,6 @@ export default function ClientPage({ onBack }: ClientPageProps) {
       setIsAnalyzing(true)
       setError(null)
       
-      console.log('Generating more movies with emotions:', emotions)
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
@@ -132,24 +89,14 @@ export default function ClientPage({ onBack }: ClientPageProps) {
         body: JSON.stringify({ emotions })
       })
 
-      if (!response.ok) {
-        const errorData = await response.json()
-        console.error('API error:', errorData)
-        throw new Error(errorData.error || t('movies.error'))
-      }
-
       const result = await response.json()
-      console.log('Generate more result:', result)
 
-      if (!result.movies || !result.emotion) {
-        console.error('Invalid response format:', result)
-        throw new Error(t('movies.error'))
+      if (!response.ok) {
+        throw new Error(result.error || t('movies.error'))
       }
 
       setMovies(result.movies)
       setShowConfetti(true)
-      analyzeCount.current += 1
-      
       setTimeout(() => setShowConfetti(false), 3000)
     } catch (error) {
       console.error('Error in handleGenerateMore:', error)
@@ -160,7 +107,6 @@ export default function ClientPage({ onBack }: ClientPageProps) {
   }
 
   const handleTryAgain = () => {
-    console.log('Resetting state for new capture')
     setMovies([])
     setEmotions(null)
     setError(null)
