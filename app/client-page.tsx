@@ -53,6 +53,7 @@ export default function ClientPage({ onBack }: ClientPageProps) {
       setIsAnalyzing(true)
       setError(null)
       
+      console.log('Sending image for analysis...')
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
@@ -61,9 +62,22 @@ export default function ClientPage({ onBack }: ClientPageProps) {
         body: JSON.stringify({ image: imageData }),
       })
 
-      const result = (await response.json()) as AnalysisResult
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('API error:', errorData)
+        throw new Error(errorData.error || 'Failed to analyze image')
+      }
+
+      const result = await response.json()
+      console.log('Analysis result:', result)
+
+      if (!result.movies || !result.emotion) {
+        console.error('Invalid response format:', result)
+        throw new Error('Invalid response from server')
+      }
+
       console.log('Setting movies:', result.movies)
-      setMovies(result.movies ?? [])
+      setMovies(result.movies)
       console.log('Setting emotions:', result.emotion)
       setEmotions(result.emotion)
       setShowConfetti(true)
@@ -72,8 +86,10 @@ export default function ClientPage({ onBack }: ClientPageProps) {
       // Hide confetti after animation
       setTimeout(() => setShowConfetti(false), 3000)
     } catch (error) {
-      console.error('Error:', error)
-      setError('An error occurred while analyzing the image')
+      console.error('Error in handleImageCapture:', error)
+      setError(error instanceof Error ? error.message : 'An error occurred while analyzing the image')
+      setMovies([])
+      setEmotions(null)
     } finally {
       setIsAnalyzing(false)
     }
