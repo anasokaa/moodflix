@@ -3,15 +3,12 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { ThemeProvider } from '@/components/theme-provider'
 import { LanguageProvider } from '@/lib/language-context'
-import { LanguageSwitcher } from '@/components/language-switcher'
-import { cn } from '@/lib/utils'
-import { fontSans } from '@/styles/fonts'
 
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'MoodFlix',
-  description: 'Cinematic therapy for every mood',
+  title: 'MoodFlix - Your Magical Movie Matchmaker',
+  description: 'Get personalized movie recommendations based on your mood!',
 }
 
 export default function RootLayout({
@@ -21,14 +18,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={cn("min-h-screen bg-background font-sans antialiased", fontSans.variable)}>
+      <body className={inter.className}>
         <ThemeProvider
           attribute="class"
-          defaultTheme="system"
+          defaultTheme="dark"
           enableSystem
+          disableTransitionOnChange
         >
           <LanguageProvider>
-            <LanguageSwitcher />
             {children}
           </LanguageProvider>
         </ThemeProvider>
