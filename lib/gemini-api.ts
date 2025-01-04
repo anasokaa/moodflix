@@ -1,5 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { getMoviePoster } from './omdb-api'
+import { getMovieDetails } from './omdb-api'
 
 interface EmotionData {
   anger: number
@@ -125,19 +125,19 @@ Return ONLY the JSON array. No additional text or explanations.`
 
       console.log('Valid movie suggestions:', suggestions)
 
-      // Get posters for each movie
-      console.log('Fetching movie posters...')
-      const moviesWithPosters = await Promise.all(
+      // Get movie details from OMDB API
+      console.log('Fetching movie details...')
+      const moviesWithDetails = await Promise.all(
         suggestions.map(async (movie) => {
           try {
-            const posterUrl = await getMoviePoster(movie.title)
+            const title = movie.title.replace(/\s*\(\d{4}\)$/, '') // Remove year from title
+            const details = await getMovieDetails(title, 'Drama', 'neutral') // Genre and emotion are placeholders
             return {
               ...movie,
-              posterUrl
+              posterUrl: details.posterUrl
             }
           } catch (error) {
-            console.error(`Error getting poster for ${movie.title}:`, error)
-            // Use a default movie poster if we can't find one
+            console.error(`Error getting details for ${movie.title}:`, error)
             return {
               ...movie,
               posterUrl: '/movie-placeholder.jpg'
@@ -146,8 +146,8 @@ Return ONLY the JSON array. No additional text or explanations.`
         })
       )
 
-      console.log('Final movie suggestions with posters:', moviesWithPosters)
-      return moviesWithPosters
+      console.log('Final movie suggestions with details:', moviesWithDetails)
+      return moviesWithDetails
 
     } catch (parseError) {
       console.error('Error parsing Gemini response:', parseError)

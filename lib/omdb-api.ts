@@ -73,7 +73,7 @@ export async function getMovieSuggestions(emotions: EmotionData): Promise<Movie[
   }
 }
 
-async function getMovieDetails(title: string, genre: string, emotion: string): Promise<Movie> {
+export async function getMovieDetails(title: string, genre: string, emotion: string): Promise<Movie> {
   const apiKey = process.env.OMDB_API_KEY
   if (!apiKey) {
     throw new Error('OMDB API key not configured')
