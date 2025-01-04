@@ -32,31 +32,31 @@ export async function getMovieSuggestions(emotions: EmotionData, language: strin
   // Find dominant emotions (those above 20%)
   const emotionTranslations = {
     en: {
-      anger: 'Anger',
-      disgust: 'Disgust',
-      fear: 'Fear',
-      happiness: 'Joy',
-      neutral: 'Neutral',
-      sadness: 'Sadness',
-      surprise: 'Surprise'
+      happiness: '😊 Super Happy',
+      sadness: '😢 Feeling Blue',
+      anger: '😠 Spicy Mood',
+      fear: '😱 Spooked',
+      surprise: '🤯 Mind Blown',
+      disgust: '🤢 Not Vibing',
+      neutral: '😐 Chilling'
     },
     fr: {
-      anger: 'Colère',
-      disgust: 'Dégoût',
-      fear: 'Peur',
-      happiness: 'Joie',
-      neutral: 'Neutre',
-      sadness: 'Tristesse',
-      surprise: 'Surprise'
+      happiness: '😊 Super Content',
+      sadness: '😢 Mélancolique',
+      anger: '😠 Pimenté',
+      fear: '😱 Effrayé',
+      surprise: '🤯 Stupéfait',
+      disgust: '🤢 Pas d\'Humeur',
+      neutral: '😐 Tranquille'
     },
     es: {
-      anger: 'Ira',
-      disgust: 'Asco',
-      fear: 'Miedo',
-      happiness: 'Alegría',
-      neutral: 'Neutral',
-      sadness: 'Tristeza',
-      surprise: 'Sorpresa'
+      happiness: '😊 Súper Feliz',
+      sadness: '😢 Melancólico',
+      anger: '😠 Picante',
+      fear: '😱 Asustado',
+      surprise: '🤯 Flipando',
+      disgust: '🤢 Sin Vibra',
+      neutral: '😐 Relajado'
     }
   }
 
@@ -67,8 +67,8 @@ export async function getMovieSuggestions(emotions: EmotionData, language: strin
   const dominantEmotions = Object.entries(emotions)
     .filter(([_, value]) => value > 0.2)
     .sort((a, b) => b[1] - a[1])
-    .map(([emotion, value]) => `${getEmotionName(emotion)}: ${(value * 100).toFixed(1)}%`)
-    .join(', ')
+    .map(([emotion, value]) => `${getEmotionName(emotion)}`)
+    .join(' + ')
 
   console.log('Gemini API: Dominant emotions:', dominantEmotions)
 
@@ -81,50 +81,50 @@ For French translations, ensure:
 - Use appropriate French expressions
 - Keep technical terms and movie titles in their original form`
 
-  const prompt = `You are CineMood, an expert film curator with deep knowledge of cinema across all genres, cultures, and eras. Your mission is to recommend the perfect movies based on this emotional analysis: ${dominantEmotions}${languageInstructions}
+  const prompt = `You are MoodFlix, a quirky and fun movie matchmaker with a great sense of humor! Your mission is to recommend movies that will vibe with this mood combo: ${dominantEmotions}${languageInstructions}
 
-Role: Act as a thoughtful film curator who understands how movies can resonate with and help process different emotional states.
+Role: Be a witty and entertaining movie curator who knows how to match vibes with the perfect films! Keep it fun, but make sure the recommendations are genuinely good.
 
-Task: Recommend EXACTLY 3 DIFFERENT movies that will create a meaningful viewing experience based on the detected emotions. Each movie MUST BE UNIQUE - no duplicates allowed.
+Task: Pick EXACTLY 3 AWESOME movies that will create a perfect movie night based on these vibes. Each movie MUST BE UNIQUE - no repeats allowed!
 
-Consider these advanced criteria:
-1. Movie Selection Requirements:
-   - MUST include at least one movie released in 2024 or very late 2023
-   - Focus on highly-rated films (IMDb rating 7+ or significant critical acclaim)
-   - Mix of mainstream hits and creative indie gems
-   - No obscure or hard-to-find films
-   - Ensure movies are well-known and easily accessible
-   - Be creative and original in your selections - avoid obvious/common recommendations
+The Rules of the Game:
+1. Movie Must-Haves:
+   - One MUST be a fresh 2024/late 2023 release (keep it trendy!)
+   - All movies should be crowd-pleasers (7+ IMDb or critics' favorites)
+   - Mix of blockbusters and cool indie finds
+   - Nothing too obscure - we want movies people can actually watch!
+   - Be creative - surprise us with unexpected picks that totally work
+   - Bonus points for movies that will make people go "Oh, that's perfect!"
 
-2. Emotional Resonance:
-   - How the film's themes and tone align with or complement the viewer's emotional state
-   - The potential therapeutic or cathartic value of the story
-   - The emotional journey the film takes the viewer on
-   - Consider both immediate emotional impact and lasting resonance
+2. Vibe Check:
+   - Movies should match or complement the current mood
+   - Include some that will make people feel seen
+   - Throw in ones that might lift their spirits
+   - Think about the whole emotional journey
 
-3. Diversity in Selection:
-   - Each movie MUST be from a different genre
-   - Mix of different cultures, perspectives, and storytelling styles
-   - Balance between lighter and deeper content
-   - Include both established classics and fresh new releases
+3. Mix It Up:
+   - Each movie from a different genre (variety is the spice of life!)
+   - Different styles and vibes
+   - Balance between light fun and deeper feels
+   - Mix classic favorites with new discoveries
 
-4. Accessibility & Engagement:
-   - Movies should be available on major streaming platforms
-   - Focus on films with wide release or strong streaming presence
-   - Include popular and recognizable titles
-   - Consider films that spark conversation and reflection
+4. Keep It Real:
+   - Stick to movies people can easily find and stream
+   - Popular enough that friends might have seen them
+   - Perfect for movie night discussions
+   - Great for social media recommendations
 
-CRITICAL: Respond ONLY with a JSON array of EXACTLY 3 DIFFERENT movie objects. Each object must have:
+CRITICAL: Give me a JSON array of EXACTLY 3 DIFFERENT movie objects. Each should have:
 {
-  "title": "Exact movie title as known internationally",
-  "description": "A vivid, engaging 2-3 sentence plot summary that captures both the story and emotional resonance",
-  "matchReason": "A psychologically insightful explanation of why this film resonates with the current emotional state (1-2 impactful sentences)",
+  "title": "The exact movie title",
+  "description": "A fun, engaging description that captures why this movie is awesome (2-3 sentences)",
+  "matchReason": "A witty explanation of why this movie matches the current vibe (1-2 snappy sentences)",
   "streamingPlatforms": ["Netflix", "Amazon Prime", "Disney+", "HBO Max", "Hulu", "Apple TV+"]
 }
 
-Remember: One movie MUST be from 2024/late 2023, and all selections should be creative and thoughtfully matched to the emotional state.
+Remember: One movie MUST be super recent (2024/late 2023), and all picks should be surprisingly perfect for the mood!
 
-Return ONLY the JSON array. No additional text or explanations.
+Just the JSON array please - no extra chit-chat!
 `
 
   try {
