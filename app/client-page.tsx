@@ -101,23 +101,41 @@ export default function ClientPage({ onBack }: ClientPageProps) {
     setError(null)
     
     try {
-      const result = await analyzeEmotionAndGetMovies('regenerate')
-      console.log('Generate more result:', result)
-
-      if (!result.success) {
-        console.error('Generate more failed:', result.error)
-        throw new Error(result.error)
+      if (!emotions) {
+        throw new Error('No emotion data available')
       }
 
-      setMovies(result.movies ?? [])
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ emotions }) // Send existing emotions for regeneration
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        console.error('API error:', errorData)
+        throw new Error(errorData.error || 'Failed to generate more movies')
+      }
+
+      const result = await response.json()
+      console.log('Generate more result:', result)
+
+      if (!result.movies || !result.emotion) {
+        console.error('Invalid response format:', result)
+        throw new Error('Invalid response from server')
+      }
+
+      setMovies(result.movies)
       setShowConfetti(true)
       analyzeCount.current += 1
       
       // Hide confetti after animation
       setTimeout(() => setShowConfetti(false), 3000)
-    } catch (err: any) {
-      console.error('Error in handleGenerateMore:', err)
-      setError(err.message)
+    } catch (error) {
+      console.error('Error in handleGenerateMore:', error)
+      setError(error instanceof Error ? error.message : 'Failed to generate more movies')
     } finally {
       setIsAnalyzing(false)
     }
@@ -128,6 +146,8 @@ export default function ClientPage({ onBack }: ClientPageProps) {
     setMovies([])
     setEmotions(null)
     setError(null)
+    setShowConfetti(false)
+    analyzeCount.current = 0
   }
 
   return (

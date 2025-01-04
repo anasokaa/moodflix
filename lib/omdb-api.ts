@@ -58,15 +58,37 @@ export async function getMovieSuggestions(emotions: EmotionData): Promise<Movie[
     const genres = EMOTION_TO_GENRE[dominantEmotion]
     const moviePromises: Promise<Movie>[] = []
 
-    // Get one movie from each genre
-    for (const genre of genres) {
+    // Always get exactly 3 movies
+    const selectedGenres = genres.slice(0, 3) // Take first 3 genres
+    if (selectedGenres.length < 3) {
+      // If we have fewer than 3 genres, repeat the first genre
+      while (selectedGenres.length < 3) {
+        selectedGenres.push(selectedGenres[0])
+      }
+    }
+
+    // Get one movie from each selected genre
+    for (const genre of selectedGenres) {
       const movies = SAMPLE_MOVIES[genre as keyof typeof SAMPLE_MOVIES]
       const randomMovie = movies[Math.floor(Math.random() * movies.length)]
       moviePromises.push(getMovieDetails(randomMovie, genre, dominantEmotion))
     }
 
     const movies = await Promise.all(moviePromises)
-    return movies.filter(movie => movie !== null) as Movie[]
+    const validMovies = movies.filter(movie => movie !== null) as Movie[]
+
+    // If we still don't have 3 movies, fill with backup movies
+    while (validMovies.length < 3) {
+      const backupGenre = 'Drama'
+      const backupMovies = SAMPLE_MOVIES[backupGenre]
+      const randomMovie = backupMovies[Math.floor(Math.random() * backupMovies.length)]
+      const movie = await getMovieDetails(randomMovie, backupGenre, dominantEmotion)
+      if (movie) {
+        validMovies.push(movie)
+      }
+    }
+
+    return validMovies
   } catch (error) {
     console.error('Error getting movie suggestions:', error)
     return []
