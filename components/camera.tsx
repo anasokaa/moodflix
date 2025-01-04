@@ -15,8 +15,6 @@ export function Camera({ onCapture }: CameraProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [isCountingDown, setIsCountingDown] = useState(false)
-  const [countdown, setCountdown] = useState(3)
 
   // Cleanup function
   const stopStream = useCallback(() => {
@@ -118,42 +116,27 @@ export function Camera({ onCapture }: CameraProps) {
     }
 
     try {
-      // Start countdown
-      setIsCountingDown(true)
-      setCountdown(3)
+      // Take the photo immediately without countdown
+      const canvas = document.createElement('canvas')
+      canvas.width = videoRef.current.videoWidth
+      canvas.height = videoRef.current.videoHeight
 
-      const countdownInterval = setInterval(() => {
-        setCountdown(prev => {
-          if (prev <= 1) {
-            clearInterval(countdownInterval)
-            setIsCountingDown(false)
-            // Take the actual photo
-            const canvas = document.createElement('canvas')
-            canvas.width = videoRef.current!.videoWidth
-            canvas.height = videoRef.current!.videoHeight
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        throw new Error('Failed to get canvas context')
+      }
 
-            const ctx = canvas.getContext('2d')
-            if (!ctx) {
-              throw new Error('Failed to get canvas context')
-            }
+      // Mirror the image if the video is mirrored
+      ctx.scale(-1, 1)
+      ctx.translate(-canvas.width, 0)
+      ctx.drawImage(videoRef.current, 0, 0)
 
-            // Mirror the image if the video is mirrored
-            ctx.scale(-1, 1)
-            ctx.translate(-canvas.width, 0)
-            ctx.drawImage(videoRef.current!, 0, 0)
-
-            const imageData = canvas.toDataURL('image/jpeg', 0.8)
-            onCapture(imageData)
-            stopStream()
-            return 0
-          }
-          return prev - 1
-        })
-      }, 1000)
+      const imageData = canvas.toDataURL('image/jpeg', 0.8)
+      onCapture(imageData)
+      stopStream()
     } catch (err) {
       console.error('Capture error:', err)
       setError('Failed to capture image: ' + (err instanceof Error ? err.message : 'unknown error'))
-      setIsCountingDown(false)
     }
   }, [onCapture, stopStream])
 
@@ -168,7 +151,7 @@ export function Camera({ onCapture }: CameraProps) {
         />
         
         {/* Face guide overlay */}
-        {isStreaming && !isCountingDown && (
+        {isStreaming && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
             <motion.div
               className="w-36 h-36 md:w-48 md:h-48 rounded-full border-2 border-primary/50 border-dashed"
@@ -178,28 +161,6 @@ export function Camera({ onCapture }: CameraProps) {
             />
           </div>
         )}
-
-        {/* Countdown overlay */}
-        <AnimatePresence>
-          {isCountingDown && (
-            <motion.div
-              className="absolute inset-0 flex items-center justify-center bg-black/20 backdrop-blur-sm"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-            >
-              <motion.div
-                key={countdown}
-                className="text-4xl md:text-6xl font-bold text-white"
-                initial={{ scale: 2, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0, opacity: 0 }}
-              >
-                {countdown}
-              </motion.div>
-            </motion.div>
-          )}
-        </AnimatePresence>
         
         <div className="absolute inset-0 flex items-center justify-center">
           {error ? (
@@ -231,7 +192,6 @@ export function Camera({ onCapture }: CameraProps) {
                   size="lg"
                   variant="secondary"
                   className="text-sm md:text-lg gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90 shadow-lg px-4 md:px-6 py-2 md:py-3 h-auto"
-                  disabled={isCountingDown}
                 >
                   <Aperture className="w-5 h-5 md:w-6 md:h-6" />
                   {t('camera.captureTheMoment')}
