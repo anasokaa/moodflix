@@ -3,7 +3,7 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { useLanguage } from '@/lib/language-context'
 import { Button } from '@/components/ui/button'
-import { Camera as CameraIcon, Aperture, RefreshCw } from 'lucide-react'
+import { Camera as CameraIcon } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 interface CameraProps {
@@ -13,194 +13,130 @@ interface CameraProps {
 export function Camera({ onCapture }: CameraProps) {
   const { t } = useLanguage()
   const videoRef = useRef<HTMLVideoElement>(null)
-  const [isStreaming, setIsStreaming] = useState(false)
+  const [isStarted, setIsStarted] = useState(false)
+  const [countdown, setCountdown] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
-
-  // Cleanup function
-  const stopStream = useCallback(() => {
-    try {
-      if (videoRef.current?.srcObject) {
-        const stream = videoRef.current.srcObject as MediaStream
-        stream.getTracks().forEach(track => track.stop())
-        videoRef.current.srcObject = null
-      }
-      setIsStreaming(false)
-    } catch (err) {
-      console.error('Error stopping stream:', err)
-    }
-  }, [])
-
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      stopStream()
-    }
-  }, [stopStream])
 
   const startCamera = useCallback(async () => {
     try {
-      // Stop any existing stream
-      stopStream()
-
-      // Create video element if it doesn't exist
-      if (!videoRef.current) {
-        console.error('Video element not found')
-        setError('Camera initialization failed')
-        return
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        video: { 
+          facingMode: 'user',
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        } 
+      })
+      
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        setIsStarted(true)
+        // Start countdown immediately when camera starts
+        setCountdown(3)
       }
-
-      console.log('Requesting camera access...')
-      const constraints = {
-        video: true, // Simplified constraints
-        audio: false
-      }
-      console.log('Using constraints:', constraints)
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
-      console.log('Camera access granted, tracks:', stream.getVideoTracks())
-
-      // Set the stream to the video element
-      videoRef.current.srcObject = stream
-      console.log('Set stream to video element')
-
-      // Enable video mirroring
-      videoRef.current.style.transform = 'scaleX(-1)'
-
-      // Wait for video to be ready
-      videoRef.current.onloadedmetadata = () => {
-        console.log('Video metadata loaded')
-        if (!videoRef.current) return
-
-        // Ensure video element is visible
-        videoRef.current.style.display = 'block'
-        
-        videoRef.current.play()
-          .then(() => {
-            console.log('Video playing successfully')
-            setIsStreaming(true)
-            setError(null)
-          })
-          .catch(err => {
-            console.error('Error playing video:', err)
-            setError('Failed to start video playback')
-          })
-      }
-
-      // Add error handler for video element
-      videoRef.current.onerror = (e) => {
-        console.error('Video element error:', e)
-        setError('Video element encountered an error')
-      }
-
     } catch (err) {
-      console.error('Camera access error:', err)
-      if (err instanceof DOMException) {
-        if (err.name === 'NotAllowedError') {
-          setError('Camera access denied. Please allow camera access and try again.')
-        } else if (err.name === 'NotFoundError') {
-          setError('No camera found. Please connect a camera and try again.')
-        } else {
-          setError(`Camera error: ${err.message}`)
-        }
-      } else {
-        setError('Failed to start camera')
-      }
+      console.error('Error accessing camera:', err)
+      setError(t('camera.error'))
     }
-  }, [stopStream])
+  }, [t])
+
+  const stopCamera = useCallback(() => {
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream
+      stream.getTracks().forEach(track => track.stop())
+      videoRef.current.srcObject = null
+      setIsStarted(false)
+    }
+  }, [])
 
   const captureImage = useCallback(() => {
-    if (!videoRef.current) {
-      console.error('Video element not found during capture')
-      setError('Failed to capture image: video element not found')
-      return
+    if (!videoRef.current) return
+
+    const canvas = document.createElement('canvas')
+    canvas.width = videoRef.current.videoWidth
+    canvas.height = videoRef.current.videoHeight
+    
+    const ctx = canvas.getContext('2d')
+    if (!ctx) return
+    
+    // Flip the image horizontally to mirror it
+    ctx.translate(canvas.width, 0)
+    ctx.scale(-1, 1)
+    
+    ctx.drawImage(videoRef.current, 0, 0)
+    const imageData = canvas.toDataURL('image/jpeg')
+    
+    onCapture(imageData)
+    stopCamera()
+  }, [onCapture, stopCamera])
+
+  useEffect(() => {
+    if (countdown === null) return
+
+    if (countdown > 0) {
+      const timer = setTimeout(() => setCountdown(countdown - 1), 1000)
+      return () => clearTimeout(timer)
+    } else {
+      captureImage()
     }
+  }, [countdown, captureImage])
 
-    try {
-      // Take the photo immediately without countdown
-      const canvas = document.createElement('canvas')
-      canvas.width = videoRef.current.videoWidth
-      canvas.height = videoRef.current.videoHeight
-
-      const ctx = canvas.getContext('2d')
-      if (!ctx) {
-        throw new Error('Failed to get canvas context')
-      }
-
-      // Mirror the image if the video is mirrored
-      ctx.scale(-1, 1)
-      ctx.translate(-canvas.width, 0)
-      ctx.drawImage(videoRef.current, 0, 0)
-
-      const imageData = canvas.toDataURL('image/jpeg', 0.8)
-      onCapture(imageData)
-      stopStream()
-    } catch (err) {
-      console.error('Capture error:', err)
-      setError('Failed to capture image: ' + (err instanceof Error ? err.message : 'unknown error'))
+  useEffect(() => {
+    return () => {
+      stopCamera()
     }
-  }, [onCapture, stopStream])
+  }, [stopCamera])
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-4 p-8 text-center">
+        <p className="text-destructive text-lg">{error}</p>
+        <Button onClick={() => setError(null)}>{t('buttons.tryAgain')}</Button>
+      </div>
+    )
+  }
 
   return (
-    <div className="relative w-full max-w-lg md:max-w-2xl mx-auto px-4">
-      <div className="relative aspect-[4/3] md:aspect-video rounded-lg overflow-hidden bg-muted">
+    <div className="relative flex flex-col items-center justify-center gap-8">
+      <div className="relative w-full max-w-2xl aspect-video rounded-lg overflow-hidden bg-muted">
         <video
           ref={videoRef}
-          className="w-full h-full object-cover"
+          autoPlay
           playsInline
-          muted
+          className="absolute inset-0 w-full h-full object-cover mirror"
         />
         
-        {/* Face guide overlay */}
-        {isStreaming && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <motion.div
-              className="w-36 h-36 md:w-48 md:h-48 rounded-full border-2 border-primary/50 border-dashed"
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ duration: 0.5 }}
-            />
+        {!isStarted && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+            <Button
+              size="lg"
+              onClick={startCamera}
+              className="gap-2"
+            >
+              <CameraIcon className="w-5 h-5" />
+              {t('camera.start')}
+            </Button>
           </div>
         )}
-        
-        <div className="absolute inset-0 flex items-center justify-center">
-          {error ? (
-            <div className="text-center p-4 md:p-6 bg-background/80 backdrop-blur-sm rounded-lg max-w-[280px] md:max-w-md mx-4">
-              <p className="text-sm md:text-base text-destructive mb-4">{error}</p>
-              <Button onClick={startCamera} variant="secondary" size="lg" className="gap-2 text-sm md:text-base px-4 py-2 h-auto">
-                <RefreshCw className="w-4 h-4 md:w-5 md:h-5" />
-                {t('camera.tryAgain')}
-              </Button>
-            </div>
-          ) : !isStreaming ? (
-            <Button 
-              onClick={startCamera} 
-              size="lg"
-              className="text-sm md:text-lg gap-2 bg-primary/90 hover:bg-primary/100 shadow-lg px-4 md:px-6 py-2 md:py-3 h-auto"
+
+        <AnimatePresence>
+          {countdown !== null && countdown > 0 && (
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 1.5, opacity: 0 }}
+              className="absolute inset-0 flex items-center justify-center"
             >
-              <CameraIcon className="w-5 h-5 md:w-6 md:h-6" />
-              {t('camera.letMeSeeYourSmile')}
-            </Button>
-          ) : (
-            <AnimatePresence mode="wait">
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-              >
-                <Button 
-                  onClick={captureImage}
-                  size="lg"
-                  variant="secondary"
-                  className="text-sm md:text-lg gap-2 bg-background/80 backdrop-blur-sm hover:bg-background/90 shadow-lg px-4 md:px-6 py-2 md:py-3 h-auto"
-                >
-                  <Aperture className="w-5 h-5 md:w-6 md:h-6" />
-                  {t('camera.captureTheMoment')}
-                </Button>
-              </motion.div>
-            </AnimatePresence>
+              <span className="text-8xl font-bold text-primary drop-shadow-lg">
+                {countdown}
+              </span>
+            </motion.div>
           )}
-        </div>
+        </AnimatePresence>
       </div>
+
+      <p className="text-muted-foreground text-center max-w-md">
+        {t('camera.instructions')}
+      </p>
     </div>
   )
 } 

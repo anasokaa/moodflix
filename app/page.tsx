@@ -4,37 +4,27 @@ import { useState } from 'react'
 import ClientPage from './client-page'
 import { WelcomeScreen } from '@/components/welcome-screen'
 import { motion, AnimatePresence } from 'framer-motion'
+import { LanguageSelector } from '@/components/language-selector'
+import { ThemeToggle } from '@/components/theme-toggle'
 
 export default function Home() {
-  const [showWelcome, setShowWelcome] = useState(true)
+  const [started, setStarted] = useState(false)
 
   return (
-    <main className="relative min-h-screen w-full overflow-hidden">
-      <div className="absolute inset-0 gradient-bg" />
-      <div className="relative z-10">
-        <AnimatePresence mode="wait">
-          {showWelcome ? (
-            <motion.div
-              key="welcome"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="min-h-screen"
-            >
-              <WelcomeScreen onStart={() => setShowWelcome(false)} />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="client"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="min-h-screen"
-            >
-              <ClientPage onBack={() => setShowWelcome(true)} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+    <div className="relative min-h-screen w-full bg-gradient-to-b from-background to-background/50">
+      {/* Controls */}
+      <div className="absolute top-4 right-4 flex items-center gap-2">
+        <LanguageSelector />
+        <ThemeToggle />
       </div>
-    </main>
+
+      <AnimatePresence mode="wait">
+        {started ? (
+          <ClientPage onBack={() => setStarted(false)} />
+        ) : (
+          <WelcomeScreen onStart={() => setStarted(true)} />
+        )}
+      </AnimatePresence>
+    </div>
   )
 } 
