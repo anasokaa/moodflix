@@ -1,42 +1,42 @@
 export const translations = {
   en: {
     welcome: {
-      title: "Ready to find your perfect movie match? ✨",
-      subtitle: "Let MoodFlix analyze your mood and suggest the perfect movies for you!",
-      start: "Start the Magic! 🎬"
+      title: "MoodFlix",
+      subtitle: "Discover movies that match your mood through the magic of AI! 🎬",
+      start: "Let's Find Your Movies!"
     },
     camera: {
-      start: "Show us your best mood face! 📸",
-      retake: "Try Again 🔄",
-      analyzing: "Reading your mood... ✨",
-      error: "Oops! Something went wrong. Please try again! 🙈"
+      start: "Take a Selfie",
+      retake: "Try Again",
+      analyzing: "Analyzing your mood...",
+      error: "Camera error. Please try again!"
     },
     movies: {
-      title: "Your Perfect Movie Matches! 🎬",
-      loading: "Finding your perfect movies... 🍿",
-      error: "Could not find movie suggestions. Please try again! 🎭",
-      regenerate: "More Movie Magic! ✨",
-      tryAgain: "Try Another Mood! 🎭"
+      title: "Your Movie Matches",
+      loading: "Finding perfect movies for you...",
+      error: "Couldn't find movies. Please try again!",
+      regenerate: "Show Me More Movies",
+      tryAgain: "Try Another Mood"
     }
   },
   fr: {
     welcome: {
-      title: "Prêt à trouver le film parfait pour ton humeur ? ✨",
-      subtitle: "Laisse MoodFlix analyser ton humeur et te suggérer les films parfaits !",
-      start: "Commencer la Magie ! 🎬"
+      title: "MoodFlix",
+      subtitle: "Découvrez des films qui correspondent à votre humeur grâce à l'IA ! 🎬",
+      start: "Trouvons Vos Films !"
     },
     camera: {
-      start: "Montre-nous ton plus beau mood ! 📸",
-      retake: "Réessayer 🔄",
-      analyzing: "Lecture de ton humeur... ✨",
-      error: "Oups ! Quelque chose s'est mal passé. Réessaie ! 🙈"
+      start: "Prenez un Selfie",
+      retake: "Réessayer",
+      analyzing: "Analyse de votre humeur...",
+      error: "Erreur de caméra. Veuillez réessayer !"
     },
     movies: {
-      title: "Tes Films Parfaits ! 🎬",
-      loading: "Recherche de tes films parfaits... 🍿",
-      error: "Impossible de trouver des suggestions de films. Réessaie ! 🎭",
-      regenerate: "Plus de Magie Cinéma ! ✨",
-      tryAgain: "Essaie une Autre Humeur ! 🎭"
+      title: "Vos Films",
+      loading: "Recherche des films parfaits pour vous...",
+      error: "Impossible de trouver des films. Veuillez réessayer !",
+      regenerate: "Plus de Films",
+      tryAgain: "Essayer une Autre Humeur"
     }
   }
 } 

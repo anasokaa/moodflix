@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { useLanguage } from '@/lib/language-context'
 import { motion } from 'framer-motion'
 import { Camera as CameraIcon } from 'lucide-react'
@@ -8,10 +8,12 @@ import { Camera as CameraIcon } from 'lucide-react'
 export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string) => void, isLoading: boolean }) {
   const videoRef = useRef<HTMLVideoElement>(null)
   const [isActive, setIsActive] = useState(false)
+  const [error, setError] = useState<string>()
   const { t } = useLanguage()
 
   const startCamera = useCallback(async () => {
     try {
+      setError(undefined)
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { 
           facingMode: 'user',
@@ -19,14 +21,17 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
           height: { ideal: 720 }
         } 
       })
+      
       if (videoRef.current) {
         videoRef.current.srcObject = stream
+        videoRef.current.play()
         setIsActive(true)
       }
     } catch (err) {
       console.error('Error accessing camera:', err)
+      setError(t('camera.error'))
     }
-  }, [])
+  }, [t])
 
   const captureImage = useCallback(() => {
     if (!videoRef.current) return
@@ -53,13 +58,40 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
     onCapture(imageData)
   }, [onCapture])
 
+  // Clean up camera stream when component unmounts
+  useEffect(() => {
+    return () => {
+      if (videoRef.current?.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream
+        stream.getTracks().forEach(track => track.stop())
+      }
+    }
+  }, [])
+
+  if (error) {
+    return (
+      <div className="w-full max-w-md mx-auto p-6 text-center space-y-4">
+        <p className="text-lg text-destructive">{error}</p>
+        <motion.button
+          onClick={() => {
+            setError(undefined)
+            startCamera()
+          }}
+          className="px-6 py-3 bg-primary text-primary-foreground rounded-full font-medium"
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          {t('camera.retake')}
+        </motion.button>
+      </div>
+    )
+  }
+
   return (
-    <div className="relative w-full max-w-2xl mx-auto">
-      {/* Camera UI */}
-      <div className="relative aspect-video rounded-2xl overflow-hidden bg-black/10 backdrop-blur-sm border-2 border-primary/20">
+    <div className="w-full max-w-2xl mx-auto">
+      <div className="relative aspect-video rounded-2xl overflow-hidden bg-black/10 backdrop-blur-sm border border-primary/10">
         {isActive ? (
           <>
-            {/* Video feed with mirror effect */}
             <video
               ref={videoRef}
               autoPlay
@@ -67,15 +99,24 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
               className="w-full h-full object-cover transform scale-x-[-1]"
             />
             
-            {/* Face guide overlay */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="w-64 h-64 border-2 border-dashed border-white/30 rounded-full" />
+              <motion.div 
+                className="w-64 h-64 border-2 border-dashed border-white/30 rounded-full"
+                animate={{
+                  scale: [1, 1.05, 1],
+                  opacity: [0.3, 0.5, 0.3]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  ease: "easeInOut"
+                }}
+              />
             </div>
             
-            {/* Capture button */}
             <motion.button
               onClick={captureImage}
-              className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground rounded-full p-4 shadow-lg"
+              className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground rounded-full p-4 shadow-lg"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               disabled={isLoading}
@@ -84,7 +125,7 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
             </motion.button>
           </>
         ) : (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 p-6">
             {isLoading ? (
               <motion.div
                 className="flex flex-col items-center gap-4"
@@ -97,11 +138,11 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
             ) : (
               <motion.button
                 onClick={startCamera}
-                className="flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-full font-medium shadow-lg"
+                className="flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full font-medium text-lg shadow-lg"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
-                <CameraIcon className="w-5 h-5" />
+                <CameraIcon className="w-6 h-6" />
                 {t('camera.start')}
               </motion.button>
             )}
