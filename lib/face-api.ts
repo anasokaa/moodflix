@@ -25,29 +25,34 @@ export async function analyzeFace(base64Image: string): Promise<FaceAttributes |
     ? base64Image.split('base64,')[1]
     : base64Image
 
-  const formData = new FormData()
-  formData.append('api_key', apiKey)
-  formData.append('api_secret', apiSecret)
-  formData.append('image_base64', imageData)
-  formData.append('return_attributes', 'emotion')
-
   try {
-    console.log('Sending request to Face++ API...')
+    console.log('Face API: Preparing request...')
+    const params = new URLSearchParams()
+    params.append('api_key', apiKey)
+    params.append('api_secret', apiSecret)
+    params.append('image_base64', imageData)
+    params.append('return_attributes', 'emotion')
+
+    console.log('Face API: Sending request...')
     const response = await fetch('https://api-us.faceplusplus.com/facepp/v3/detect', {
       method: 'POST',
-      body: formData,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
     })
 
     const data = await response.json()
-    console.log('Face++ API response:', data)
+    console.log('Face API: Response status:', response.status)
+    console.log('Face API: Response data:', JSON.stringify(data, null, 2))
 
     if (!response.ok) {
-      console.error('Face++ API error:', data.error_message)
+      console.error('Face API: Error response:', data.error_message)
       throw new Error(data.error_message || 'Failed to analyze face')
     }
 
     if (!data.faces || data.faces.length === 0) {
-      console.log('No faces detected in the image')
+      console.log('Face API: No faces detected')
       return null
     }
 
@@ -61,10 +66,10 @@ export async function analyzeFace(base64Image: string): Promise<FaceAttributes |
       return acc
     }, {} as EmotionData)
 
-    console.log('Normalized emotions:', normalizedEmotions)
+    console.log('Face API: Normalized emotions:', normalizedEmotions)
     return { emotion: normalizedEmotions }
   } catch (error) {
-    console.error('Error in face analysis:', error)
+    console.error('Face API: Error:', error)
     throw error
   }
 } 
