@@ -12,19 +12,22 @@ export default function Home() {
 
   return (
     <div className="relative min-h-screen w-full bg-gradient-to-b from-background to-background/50">
-      {/* Controls */}
-      <div className="absolute top-4 right-4 flex items-center gap-2">
+      {/* Controls - Fixed position with high z-index */}
+      <div className="fixed top-4 right-4 flex items-center gap-2 z-[100]">
         <LanguageSelector />
         <ThemeToggle />
       </div>
 
-      <AnimatePresence mode="wait">
-        {started ? (
-          <ClientPage onBack={() => setStarted(false)} />
-        ) : (
-          <WelcomeScreen onStart={() => setStarted(true)} />
-        )}
-      </AnimatePresence>
+      {/* Content */}
+      <div className="relative z-10">
+        <AnimatePresence mode="wait">
+          {started ? (
+            <ClientPage onBack={() => setStarted(false)} />
+          ) : (
+            <WelcomeScreen onStart={() => setStarted(true)} />
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   )
 } 
