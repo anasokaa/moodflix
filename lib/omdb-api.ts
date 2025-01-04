@@ -78,7 +78,17 @@ export async function getMovieSuggestions(emotions: EmotionData): Promise<Movie[
       const movies = SAMPLE_MOVIES[genre as keyof typeof SAMPLE_MOVIES]
       const randomMovie = movies[Math.floor(Math.random() * movies.length)]
       console.log(`Selected "${randomMovie}" from ${genre} genre`)
-      moviePromises.push(getMovieDetails(randomMovie, genre, dominantEmotion))
+      const details = await getMovieDetails(randomMovie)
+      if (details) {
+        moviePromises.push(Promise.resolve({
+          ...details,
+          description: `A ${genre.toLowerCase()} film that captures the essence of ${dominantEmotion.toLowerCase()}.`,
+          matchReason: `This ${genre.toLowerCase()} movie matches your ${dominantEmotion.toLowerCase()} mood.`,
+          streamingPlatforms: ['Netflix', 'Amazon Prime', 'Disney+']
+        }))
+      } else {
+        moviePromises.push(Promise.resolve(null))
+      }
     }
 
     const movies = await Promise.all(moviePromises)
@@ -94,9 +104,14 @@ export async function getMovieSuggestions(emotions: EmotionData): Promise<Movie[
       while (validMovies.length < 3) {
         const randomMovie = backupMovies[Math.floor(Math.random() * backupMovies.length)]
         console.log(`Trying backup movie: "${randomMovie}"`)
-        const movie = await getMovieDetails(randomMovie, backupGenre, dominantEmotion)
-        if (movie) {
-          validMovies.push(movie)
+        const details = await getMovieDetails(randomMovie)
+        if (details) {
+          validMovies.push({
+            ...details,
+            description: `A ${backupGenre.toLowerCase()} film that resonates with your current mood.`,
+            matchReason: `This ${backupGenre.toLowerCase()} movie complements your emotional state.`,
+            streamingPlatforms: ['Netflix', 'Amazon Prime', 'Disney+']
+          })
         }
       }
     }
