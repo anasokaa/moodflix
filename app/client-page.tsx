@@ -137,7 +137,7 @@ export default function ClientPage({ onBack }: ClientPageProps) {
   return (
     <AnimatePresence mode="wait">
       <div className="relative min-h-screen w-full">
-        <div className="fixed top-4 right-4 flex items-center gap-2 z-50">
+        <div className="fixed top-4 right-4 flex items-center gap-2 z-[100]">
           <LanguageSelector />
           <ThemeToggle />
         </div>
@@ -151,9 +151,17 @@ export default function ClientPage({ onBack }: ClientPageProps) {
           <ArrowLeft className="h-6 w-6" />
         </Button>
 
+        <motion.h1 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 text-3xl font-bold bg-gradient-to-r from-pink-500 to-violet-500 text-transparent bg-clip-text"
+        >
+          MoodFlix
+        </motion.h1>
+
         <Confetti trigger={showConfetti} />
 
-        <div className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="container mx-auto px-4 py-20 max-w-7xl min-h-screen flex flex-col items-center justify-center">
           {isAnalyzing ? (
             <MoodProgress
               message={analyzeCount.current === 0 ? t('loading.analyzing') : t('loading.regenerating')}

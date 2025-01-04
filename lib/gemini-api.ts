@@ -54,39 +54,44 @@ Role: Act as a thoughtful film curator who understands how movies can resonate w
 Task: Recommend EXACTLY 3 DIFFERENT movies that will create a meaningful viewing experience based on the detected emotions. Each movie MUST BE UNIQUE - no duplicates allowed.
 
 Consider these advanced criteria:
-1. Movie Quality & Relevance:
+1. Movie Selection Requirements:
+   - MUST include at least one movie released in 2024 or very late 2023
    - Focus on highly-rated films (IMDb rating 7+ or significant critical acclaim)
-   - Include at least one movie from the last 5 years
-   - Mix of mainstream hits and hidden gems
+   - Mix of mainstream hits and creative indie gems
    - No obscure or hard-to-find films
    - Ensure movies are well-known and easily accessible
+   - Be creative and original in your selections - avoid obvious/common recommendations
 
 2. Emotional Resonance:
    - How the film's themes and tone align with or complement the viewer's emotional state
    - The potential therapeutic or cathartic value of the story
    - The emotional journey the film takes the viewer on
+   - Consider both immediate emotional impact and lasting resonance
 
 3. Diversity in Selection:
    - Each movie MUST be from a different genre
-   - Mix of different cultures and perspectives
-   - Variety in storytelling styles
+   - Mix of different cultures, perspectives, and storytelling styles
    - Balance between lighter and deeper content
+   - Include both established classics and fresh new releases
 
-4. Accessibility:
+4. Accessibility & Engagement:
    - Movies should be available on major streaming platforms
    - Focus on films with wide release or strong streaming presence
-   - Avoid region-locked or limited-release films
    - Include popular and recognizable titles
+   - Consider films that spark conversation and reflection
 
 CRITICAL: Respond ONLY with a JSON array of EXACTLY 3 DIFFERENT movie objects. Each object must have:
 {
-  "title": "Exact movie title as known internationally - e.g., 'Inside Out', 'The Shawshank Redemption'",
-  "description": "A vivid, engaging plot summary that captures the essence of the film (2-3 sentences)",
+  "title": "Exact movie title as known internationally",
+  "description": "A vivid, engaging 2-3 sentence plot summary that captures both the story and emotional resonance",
   "matchReason": "A psychologically insightful explanation of why this film resonates with the current emotional state (1-2 impactful sentences)",
   "streamingPlatforms": ["Netflix", "Amazon Prime", "Disney+", "HBO Max", "Hulu", "Apple TV+"]
 }
 
-Return ONLY the JSON array. No additional text or explanations.`
+Remember: One movie MUST be from 2024/late 2023, and all selections should be creative and thoughtfully matched to the emotional state.
+
+Return ONLY the JSON array. No additional text or explanations.
+`
 
   try {
     console.log('Gemini API: Sending request...')
