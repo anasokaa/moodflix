@@ -45,9 +45,11 @@ export default function ClientPage({ onBack }: ClientPageProps) {
 
   const handleImageCapture = async (imageData: string) => {
     try {
+      console.log('Starting image capture process...')
       setIsAnalyzing(true)
       setError(null)
       
+      console.log('Sending image to API...')
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: {
@@ -56,15 +58,22 @@ export default function ClientPage({ onBack }: ClientPageProps) {
         body: JSON.stringify({ image: imageData }),
       })
 
+      console.log('API Response Status:', response.status)
       const result = await response.json()
+      console.log('API Response:', result)
 
       if (!response.ok) {
+        console.error('API error:', result)
         throw new Error(result.error || t('movies.error'))
       }
 
+      console.log('Setting movies:', result.movies)
+      console.log('Setting emotions:', result.emotion)
+      
       setMovies(result.movies)
       setEmotions(result.emotion)
       setShowConfetti(true)
+      analyzeCount.current += 1
       setTimeout(() => setShowConfetti(false), 3000)
     } catch (error) {
       console.error('Error in handleImageCapture:', error)
