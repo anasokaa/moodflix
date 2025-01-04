@@ -19,10 +19,11 @@ interface Movie {
   streamingPlatforms: string[]
 }
 
-export async function getMovieSuggestions(emotions: EmotionData) {
+export async function getMovieSuggestions(emotions: EmotionData): Promise<Movie[]> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
-    throw new Error('Gemini API key not configured')
+    console.error('Gemini API: API key not configured')
+    return []
   }
 
   const genAI = new GoogleGenerativeAI(apiKey)
@@ -35,7 +36,7 @@ export async function getMovieSuggestions(emotions: EmotionData) {
     .map(([emotion, value]) => `${emotion}: ${(value * 100).toFixed(1)}%`)
     .join(', ')
 
-  console.log('Dominant emotions:', dominantEmotions)
+  console.log('Gemini API: Dominant emotions:', dominantEmotions)
 
   const prompt = `You are CineMood, an expert film curator with deep knowledge of cinema across all genres, cultures, and eras. Your mission is to recommend the perfect movies based on this emotional analysis: ${dominantEmotions}
 
@@ -68,36 +69,20 @@ Consider these advanced criteria:
 
 CRITICAL: Respond ONLY with a JSON array of exactly 3 movie objects. Each object must have:
 {
-  "title": "Exact movie title with year - e.g., 'Inside Out (2015)'",
+  "title": "Exact movie title - e.g., 'Inside Out'",
   "description": "A vivid, engaging plot summary that captures the essence of the film (2-3 sentences)",
   "matchReason": "A psychologically insightful explanation of why this film resonates with the current emotional state (1-2 impactful sentences)",
   "streamingPlatforms": ["Array of major platforms", "Netflix", "Amazon Prime", "Disney+", "HBO Max", "Hulu", "Apple TV+"]
 }
 
-Ensure each recommendation:
-- Serves a distinct emotional purpose
-- Represents a different genre or style
-- Offers a unique perspective or approach
-- Has strong emotional intelligence in its storytelling
-
-Format Example:
-[
-  {
-    "title": "Good Will Hunting (1997)",
-    "description": "A janitor at MIT with a genius-level IQ begins a transformative journey of self-discovery through therapy sessions. As he confronts his past trauma and fear of vulnerability, he learns to open himself to genuine connections and his own potential.",
-    "matchReason": "The film's profound exploration of emotional barriers and the healing power of human connection speaks directly to the mixture of vulnerability and growth potential in the current emotional state.",
-    "streamingPlatforms": ["Amazon Prime", "HBO Max"]
-  }
-]
-
 Return ONLY the JSON array. No additional text or explanations.`
 
   try {
-    console.log('Sending request to Gemini API...')
+    console.log('Gemini API: Sending request...')
     const result = await model.generateContent(prompt)
     const response = await result.response
     const text = response.text()
-    console.log('Raw Gemini response:', text)
+    console.log('Gemini API: Raw response:', text)
     
     // Clean the response text to ensure it's valid JSON
     const cleanedText = text.trim()
@@ -108,27 +93,32 @@ Return ONLY the JSON array. No additional text or explanations.`
     
     try {
       const suggestions = JSON.parse(cleanedText)
+      console.log('Gemini API: Parsed suggestions:', suggestions)
       
       if (!Array.isArray(suggestions) || suggestions.length === 0) {
-        console.error('Invalid response format: not an array or empty array')
-        throw new Error('Invalid response format: not an array or empty array')
+        console.error('Gemini API: Invalid response format: not an array or empty array')
+        return []
       }
 
       // Validate each suggestion has required properties
-      for (const suggestion of suggestions) {
-        if (!suggestion.title || !suggestion.description || !suggestion.matchReason || 
-            !Array.isArray(suggestion.streamingPlatforms)) {
-          console.error('Invalid movie suggestion:', suggestion)
-          throw new Error('Invalid movie suggestion: missing required properties')
-        }
+      const validSuggestions = suggestions.filter(suggestion => 
+        suggestion.title && 
+        suggestion.description && 
+        suggestion.matchReason && 
+        Array.isArray(suggestion.streamingPlatforms)
+      )
+
+      if (validSuggestions.length === 0) {
+        console.error('Gemini API: No valid suggestions found')
+        return []
       }
 
-      console.log('Valid movie suggestions:', suggestions)
+      console.log('Gemini API: Valid suggestions:', validSuggestions)
 
       // Get movie details from OMDB API
-      console.log('Fetching movie details...')
+      console.log('Gemini API: Fetching movie details...')
       const moviesWithDetails = await Promise.all(
-        suggestions.map(async (movie) => {
+        validSuggestions.map(async (movie) => {
           try {
             const title = movie.title.replace(/\s*\(\d{4}\)$/, '') // Remove year from title
             const details = await getMovieDetails(title, 'Drama', 'neutral') // Genre and emotion are placeholders
@@ -137,7 +127,7 @@ Return ONLY the JSON array. No additional text or explanations.`
               posterUrl: details?.posterUrl || '/movie-placeholder.jpg'
             }
           } catch (error) {
-            console.error(`Error getting details for ${movie.title}:`, error)
+            console.error(`Gemini API: Error getting details for ${movie.title}:`, error)
             return {
               ...movie,
               posterUrl: '/movie-placeholder.jpg'
@@ -146,16 +136,15 @@ Return ONLY the JSON array. No additional text or explanations.`
         })
       )
 
-      console.log('Final movie suggestions with details:', moviesWithDetails)
+      console.log('Gemini API: Final suggestions with details:', moviesWithDetails)
       return moviesWithDetails
-
     } catch (parseError) {
-      console.error('Error parsing Gemini response:', parseError)
-      console.error('Raw response:', text)
-      throw new Error('Failed to parse movie suggestions')
+      console.error('Gemini API: Error parsing response:', parseError)
+      console.error('Gemini API: Raw response:', text)
+      return []
     }
   } catch (error) {
-    console.error('Error getting movie suggestions from Gemini:', error)
-    throw error
+    console.error('Gemini API: Error getting suggestions:', error)
+    return []
   }
 } 

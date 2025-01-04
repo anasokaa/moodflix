@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { analyzeFace } from '@/lib/face-api'
-import { getMovieSuggestions } from '@/lib/omdb-api'
+import { getMovieSuggestions as getGeminiSuggestions } from '@/lib/gemini-api'
+import { getMovieSuggestions as getOmdbSuggestions } from '@/lib/omdb-api'
 
 export async function POST(request: Request) {
   try {
@@ -8,12 +9,14 @@ export async function POST(request: Request) {
     const envCheck = {
       FACE_API_KEY: !!process.env.FACE_API_KEY,
       FACE_API_SECRET: !!process.env.FACE_API_SECRET,
-      OMDB_API_KEY: !!process.env.OMDB_API_KEY
+      OMDB_API_KEY: !!process.env.OMDB_API_KEY,
+      GEMINI_API_KEY: !!process.env.GEMINI_API_KEY
     }
     
     console.log('API: Environment variables check:', envCheck)
     
-    if (!envCheck.FACE_API_KEY || !envCheck.FACE_API_SECRET || !envCheck.OMDB_API_KEY) {
+    if (!envCheck.FACE_API_KEY || !envCheck.FACE_API_SECRET || 
+        !envCheck.OMDB_API_KEY || !envCheck.GEMINI_API_KEY) {
       console.error('API: Missing environment variables:', 
         Object.entries(envCheck)
           .filter(([_, value]) => !value)
@@ -61,11 +64,33 @@ export async function POST(request: Request) {
     }
 
     console.log('API: Getting movie suggestions for emotions:', emotions)
-    const movies = await getMovieSuggestions(emotions)
-    console.log('API: Movie suggestions:', movies)
+    
+    try {
+      // Try Gemini API first
+      console.log('API: Attempting to get suggestions from Gemini...')
+      const geminiMovies = await getGeminiSuggestions(emotions)
+      console.log('API: Gemini suggestions:', geminiMovies)
+      
+      if (geminiMovies && geminiMovies.length >= 3) {
+        console.log('API: Successfully got suggestions from Gemini')
+        return NextResponse.json({
+          movies: geminiMovies.slice(0, 3),
+          emotion: emotions
+        })
+      }
+      
+      console.log('API: Gemini failed or returned insufficient results, falling back to OMDB...')
+    } catch (error) {
+      console.error('API: Gemini error:', error)
+      console.log('API: Falling back to OMDB...')
+    }
 
-    if (!movies || movies.length === 0) {
-      console.log('API: No movie suggestions found')
+    // Fallback to OMDB if Gemini fails
+    const omdbMovies = await getOmdbSuggestions(emotions)
+    console.log('API: OMDB suggestions:', omdbMovies)
+
+    if (!omdbMovies || omdbMovies.length === 0) {
+      console.log('API: No movie suggestions found from either source')
       return NextResponse.json(
         { error: 'Could not find movie suggestions. Please try again.' },
         { status: 500 }
@@ -73,7 +98,7 @@ export async function POST(request: Request) {
     }
 
     const response = {
-      movies: movies.slice(0, 3),
+      movies: omdbMovies.slice(0, 3),
       emotion: emotions
     }
     console.log('API: Sending response:', response)
