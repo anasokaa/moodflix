@@ -16,11 +16,15 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
   const [isStarted, setIsStarted] = useState(false)
   const [countdown, setCountdown] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [showPreview, setShowPreview] = useState(false)
 
   const startCamera = useCallback(() => {
     try {
       setIsStarted(true)
       setError(null)
+      setCapturedImage(null)
+      setShowPreview(false)
       // Start countdown from 3
       setCountdown(3)
       const timer = setInterval(() => {
@@ -31,7 +35,8 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
             try {
               const imageSrc = webcamRef.current?.getScreenshot()
               if (imageSrc) {
-                onCapture(imageSrc)
+                setCapturedImage(imageSrc)
+                setShowPreview(true)
               } else {
                 throw new Error('Failed to capture image')
               }
@@ -48,12 +53,28 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
       setError(t('camera.error'))
       setIsStarted(false)
     }
-  }, [onCapture, t])
+  }, [t])
+
+  const handleAcceptImage = useCallback(() => {
+    if (capturedImage) {
+      onCapture(capturedImage)
+    }
+  }, [capturedImage, onCapture])
+
+  const handleRetake = useCallback(() => {
+    setCapturedImage(null)
+    setShowPreview(false)
+    startCamera()
+  }, [startCamera])
 
   if (error) {
     return (
-      <div className="text-center space-y-4">
-        <p className="text-destructive">{error}</p>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="text-center space-y-4 p-6 rounded-xl bg-destructive/10"
+      >
+        <p className="text-destructive text-lg">{error}</p>
         <motion.button
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -62,7 +83,7 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
         >
           {t('buttons.tryAgain')}
         </motion.button>
-      </div>
+      </motion.div>
     )
   }
 
@@ -78,17 +99,60 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
             className="text-center space-y-4"
           >
             <motion.button
-              whileHover={{ scale: 1.05 }}
+              whileHover={{ scale: 1.05, boxShadow: "0 0 30px rgba(var(--primary), 0.3)" }}
               whileTap={{ scale: 0.95 }}
               onClick={startCamera}
-              className="px-8 py-4 rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
+              className="group relative px-8 py-4 rounded-full bg-primary text-primary-foreground font-bold text-lg shadow-lg hover:shadow-xl transition-all duration-200"
               disabled={isLoading}
             >
-              {isLoading ? '🎬 Processing...' : '📸 Strike a Pose!'}
+              <span className="relative z-10">
+                {isLoading ? '🎬 Processing...' : '📸 Strike a Pose!'}
+              </span>
+              <motion.div
+                className="absolute inset-0 rounded-full bg-gradient-to-r from-primary/80 to-purple-600/80"
+                initial={{ opacity: 0, scale: 0.8 }}
+                whileHover={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.2 }}
+              />
             </motion.button>
             <p className="text-sm text-muted-foreground">
               Get ready for your close-up! 🌟
             </p>
+          </motion.div>
+        ) : showPreview && capturedImage ? (
+          <motion.div
+            key="preview"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="space-y-4"
+          >
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+              <img 
+                src={capturedImage} 
+                alt="Preview" 
+                className="w-full aspect-[4/3] object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+            </div>
+            <div className="flex gap-4 justify-center">
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleRetake}
+                className="px-6 py-3 rounded-full bg-secondary text-secondary-foreground font-semibold"
+              >
+                Retake 📸
+              </motion.button>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={handleAcceptImage}
+                className="px-6 py-3 rounded-full bg-primary text-primary-foreground font-semibold"
+              >
+                Perfect! ✨
+              </motion.button>
+            </div>
           </motion.div>
         ) : (
           <motion.div
@@ -110,9 +174,20 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
                 }}
               />
               {/* Face guide overlay */}
-              <div className="absolute inset-0 pointer-events-none">
+              <motion.div 
+                className="absolute inset-0 pointer-events-none"
+                animate={{
+                  opacity: [0.3, 0.5],
+                  scale: [1, 1.02]
+                }}
+                transition={{
+                  duration: 2,
+                  repeat: Infinity,
+                  repeatType: "reverse"
+                }}
+              >
                 <div className="absolute inset-[20%] border-4 border-dashed border-white/30 rounded-full" />
-              </div>
+              </motion.div>
               {/* Countdown overlay */}
               {countdown && (
                 <motion.div
@@ -120,11 +195,21 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
                   initial={{ scale: 2, opacity: 0 }}
                   animate={{ scale: 1, opacity: 1 }}
                   exit={{ scale: 0, opacity: 0 }}
-                  className="absolute inset-0 flex items-center justify-center"
+                  className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-sm"
                 >
-                  <span className="text-6xl font-bold text-white drop-shadow-lg">
+                  <motion.span 
+                    className="text-8xl font-bold text-white drop-shadow-lg"
+                    animate={{
+                      scale: [1, 1.2, 1],
+                      opacity: [1, 0.8, 0]
+                    }}
+                    transition={{
+                      duration: 1,
+                      times: [0, 0.5, 1]
+                    }}
+                  >
                     {countdown}
-                  </span>
+                  </motion.span>
                 </motion.div>
               )}
             </div>
