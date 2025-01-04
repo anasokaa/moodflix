@@ -25,7 +25,7 @@ MoodFlix is a magical movie recommendation app that suggests films based on your
 
 1. Clone the repository:
    ```bash
-   git clone https://github.com/yourusername/moodflix.git
+   git clone https://github.com/anasokaa/moodflix.git
    cd moodflix
    ```
 
