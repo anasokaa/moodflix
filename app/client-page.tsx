@@ -35,30 +35,25 @@ export default function ClientPage() {
     try {
       setIsLoading(true)
       setError(undefined)
+      setMovies([])
+      setEmotions(undefined)
 
       const response = await fetch('/api/analyze', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ image: imageData }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ image: imageData })
       })
 
-      if (!response.ok) {
-        throw new Error(t('movies.error'))
-      }
-
       const data = await response.json()
-      if (!data.movies || data.movies.length === 0) {
-        throw new Error(t('movies.error'))
+      
+      if (!response.ok) {
+        throw new Error(data.error || t('movies.error'))
       }
 
       setMovies(data.movies)
-      if (data.emotions) {
-        setEmotions(data.emotions)
-      }
+      setEmotions(data.emotions)
     } catch (err) {
-      console.error('Error analyzing image:', err)
+      console.error('Error:', err)
       setError(err instanceof Error ? err.message : t('movies.error'))
     } finally {
       setIsLoading(false)
@@ -72,24 +67,23 @@ export default function ClientPage() {
 
       const response = await fetch('/api/analyze', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ emotions, previousMovies: movies.map(m => m.title) }),
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          image: 'regenerate',
+          emotions,
+          previousMovies: movies.map(m => m.title)
+        })
       })
 
-      if (!response.ok) {
-        throw new Error(t('movies.error'))
-      }
-
       const data = await response.json()
-      if (!data.movies || data.movies.length === 0) {
-        throw new Error(t('movies.error'))
+      
+      if (!response.ok) {
+        throw new Error(data.error || t('movies.error'))
       }
 
       setMovies(data.movies)
     } catch (err) {
-      console.error('Error generating more movies:', err)
+      console.error('Error:', err)
       setError(err instanceof Error ? err.message : t('movies.error'))
     } finally {
       setIsLoading(false)
