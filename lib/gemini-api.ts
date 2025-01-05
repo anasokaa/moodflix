@@ -19,7 +19,7 @@ interface Movie {
   streamingPlatforms: string[]
 }
 
-export async function getMovieSuggestions(emotions: EmotionData, language: string = 'en'): Promise<Movie[]> {
+export async function getMovieSuggestions(emotions: EmotionData, language: string = 'en', previousMovies: string[] = []): Promise<Movie[]> {
   const apiKey = process.env.GEMINI_API_KEY
   if (!apiKey) {
     console.error('Gemini API: API key not configured')
@@ -35,6 +35,7 @@ export async function getMovieSuggestions(emotions: EmotionData, language: strin
 
   // Create a simple, direct prompt
   const prompt = `You are a movie expert. Based on the emotion "${dominantEmotion}", suggest 3 unique movies that would be perfect to watch.
+${previousMovies.length > 0 ? `\nDo NOT suggest any of these movies that were already recommended: ${previousMovies.join(', ')}` : ''}
 
 Requirements:
 - Each movie MUST be unique (no duplicates)
@@ -45,14 +46,14 @@ Requirements:
 - Must be available on major streaming platforms
 
 For each movie, provide:
-- Title
+- Title (include the year in parentheses)
 - A brief, engaging description (2-3 sentences)
 - Why it matches the emotion (1 sentence)
-- List of streaming platforms where it's available
+- List of streaming platforms where it's available (only include: Netflix, Disney+, Prime Video, Apple TV+, HBO Max, Shudder)
 
 Format the response as a JSON array with this structure:
 [{
-  "title": "Movie Title",
+  "title": "Movie Title (Year)",
   "description": "Movie description",
   "matchReason": "Why it matches the emotion",
   "streamingPlatforms": ["Platform1", "Platform2"]
@@ -94,11 +95,17 @@ Format the response as a JSON array with this structure:
     const moviesWithPosters = await Promise.all(
       validSuggestions.map(async (movie) => {
         try {
-          const title = movie.title.replace(/\s*\(\d{4}\)$/, '') // Remove year from title
-          const details = await getMovieDetails(title)
+          // Extract the movie title without the year
+          const titleWithoutYear = movie.title.replace(/\s*\([^)]*\)$/, '')
+          const details = await getMovieDetails(titleWithoutYear)
+          
+          if (!details) {
+            throw new Error(`No details found for movie: ${titleWithoutYear}`)
+          }
+
           return {
             ...movie,
-            posterUrl: details?.posterUrl || '/movie-placeholder.jpg'
+            posterUrl: details.posterUrl
           }
         } catch (error) {
           console.error(`Error getting poster for ${movie.title}:`, error)
