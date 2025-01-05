@@ -1,11 +1,13 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
-import { MovieSuggestions } from '@/components/movie-suggestions'
-import { EmotionDisplay } from '@/components/emotion-display'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { useLanguage } from '@/lib/language-context'
+import { EmotionDisplay } from '@/components/emotion-display'
+import { Sparkles, Loader2 } from 'lucide-react'
 
 interface Movie {
   title: string
@@ -13,72 +15,89 @@ interface Movie {
   matchReason: string
   posterUrl: string
   streamingPlatforms: string[]
-  funFact?: string
-  rating?: string
-  genre?: string
 }
 
-interface EmotionData {
-  anger: number
-  disgust: number
-  fear: number
-  happiness: number
-  neutral: number
-  sadness: number
-  surprise: number
-}
-
-interface StoredData {
+interface MovieData {
   movies: Movie[]
-  emotions: EmotionData
-  success?: boolean
+  emotions: Record<string, number>
 }
 
-// Map emotion keys to their display names
-const emotionDisplayNames: Record<string, string> = {
-  anger: 'angry',
-  disgust: 'disgusted',
-  fear: 'fearful',
-  happiness: 'happy',
-  neutral: 'neutral',
-  sadness: 'sad',
-  surprise: 'surprised'
+const MovieCard = ({ movie }: { movie: Movie }) => {
+  return (
+    <Card className="overflow-hidden">
+      <div className="relative aspect-[2/3] bg-muted">
+        <img
+          src={movie.posterUrl}
+          alt={movie.title}
+          className="absolute inset-0 w-full h-full object-cover"
+          loading="lazy"
+        />
+      </div>
+      <div className="p-6 space-y-4">
+        <h2 className="text-2xl font-bold">{movie.title}</h2>
+        <p className="text-muted-foreground">{movie.description}</p>
+        <p className="text-sm italic">{movie.matchReason}</p>
+        <div className="flex flex-wrap gap-2">
+          {movie.streamingPlatforms.map(platform => (
+            <span
+              key={platform}
+              className="px-2 py-1 text-xs rounded-full bg-primary/10 text-primary"
+            >
+              {platform}
+            </span>
+          ))}
+        </div>
+      </div>
+    </Card>
+  )
 }
 
 export default function MovieRevealPage() {
+  const [movieData, setMovieData] = useState<MovieData | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const { t } = useLanguage()
 
-  useEffect(() => {
-    // If there's no movie data in sessionStorage, redirect back to home
-    const movieData = sessionStorage.getItem('movieData')
-    if (!movieData) {
-      router.push('/')
+  // Memoize session data
+  const sessionData = useMemo(() => {
+    const storedMovieData = sessionStorage.getItem('movieData')
+    const storedEmotions = sessionStorage.getItem('emotions')
+    const storedPreviousMovies = sessionStorage.getItem('previousMovies')
+    
+    return {
+      movieData: storedMovieData ? JSON.parse(storedMovieData) : null,
+      emotions: storedEmotions ? JSON.parse(storedEmotions) : null,
+      previousMovies: storedPreviousMovies ? JSON.parse(storedPreviousMovies) : []
     }
-  }, [router])
+  }, [])
 
-  const handleGenerateMore = async () => {
+  useEffect(() => {
+    if (!sessionData.movieData || !sessionData.emotions) {
+      router.push('/')
+      return
+    }
+    setMovieData(sessionData.movieData)
+  }, [router, sessionData])
+
+  const handleGenerateMore = useCallback(async () => {
+    if (isLoading) return
+    
     try {
-      const storedEmotions = sessionStorage.getItem('emotions')
-      const storedMovies = sessionStorage.getItem('previousMovies')
-      const selectedPlatforms = sessionStorage.getItem('selectedPlatforms')
-      
-      if (!storedEmotions) {
-        throw new Error('No emotion data found')
-      }
+      setIsLoading(true)
+      setError(null)
 
-      const emotions = JSON.parse(storedEmotions) as EmotionData
-      const previousMovies = storedMovies ? JSON.parse(storedMovies) as string[] : []
-      const platforms = selectedPlatforms ? JSON.parse(selectedPlatforms) as string[] : []
+      const selectedPlatforms = sessionStorage.getItem('selectedPlatforms')
+      const platforms = selectedPlatforms ? JSON.parse(selectedPlatforms) : []
+      const previousMovies = sessionData.previousMovies
 
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          image: 'regenerate',
-          emotions,
-          previousMovies,
-          platforms
+        body: JSON.stringify({
+          emotions: sessionData.emotions,
+          platforms,
+          previousMovies
         })
       })
 
@@ -88,72 +107,82 @@ export default function MovieRevealPage() {
         throw new Error(data.error || t('movies.error'))
       }
 
-      // Store the new movie data
+      setMovieData(data)
       sessionStorage.setItem('movieData', JSON.stringify(data))
-      if (data.movies) {
-        const updatedPreviousMovies = [...previousMovies, ...data.movies.map((m: Movie) => m.title)]
-        sessionStorage.setItem('previousMovies', JSON.stringify(updatedPreviousMovies))
-      }
-
-      // Force a re-render by reloading the page
-      window.location.reload()
+      sessionStorage.setItem('previousMovies', JSON.stringify([
+        ...previousMovies,
+        ...data.movies.map((m: Movie) => m.title)
+      ]))
     } catch (err) {
       console.error('Error:', err)
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred')
+    } finally {
+      setIsLoading(false)
     }
+  }, [isLoading, sessionData, t])
+
+  if (!movieData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin" />
+      </div>
+    )
   }
-
-  const storedData = typeof window !== 'undefined' ? sessionStorage.getItem('movieData') : null
-  const data: StoredData = storedData ? JSON.parse(storedData) : { movies: [], emotions: {} as EmotionData }
-
-  // Get the dominant emotion and convert it to its display name
-  const dominantEmotion = data.emotions && Object.keys(data.emotions).length > 0 ? 
-    Object.entries(data.emotions)
-      .reduce((a, b) => a[1] > b[1] ? a : b, ['neutral', 0])[0] 
-    : 'neutral'
-  
-  const displayEmotion = emotionDisplayNames[dominantEmotion] || dominantEmotion
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-background to-primary/5 py-12">
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-        className="container mx-auto px-4 space-y-8"
-      >
-        {/* Emotion Display */}
+      <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="max-w-md mx-auto"
+          className="max-w-4xl mx-auto space-y-12"
         >
-          <EmotionDisplay emotion={displayEmotion} />
-        </motion.div>
+          <div className="text-center space-y-4">
+            <h1 className="text-4xl font-bold">Your Perfect Movie Match! ✨</h1>
+            {movieData.emotions && (
+              <EmotionDisplay emotions={movieData.emotions} />
+            )}
+          </div>
 
-        {/* Movie Suggestions */}
-        <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
-        >
-          <MovieSuggestions
-            movies={data.movies}
-            emotions={data.emotions}
-            onGenerateMore={handleGenerateMore}
-          />
-        </motion.div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={movieData.movies[0].title}
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ type: "spring", duration: 0.5 }}
+            >
+              <MovieCard movie={movieData.movies[0]} />
+            </motion.div>
+          </AnimatePresence>
 
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.2 }}
-          onClick={() => router.push('/')}
-          className="mx-auto block px-6 py-3 rounded-full bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-all duration-300"
-        >
-          ← Take Another Photo
-        </motion.button>
-      </motion.div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+            className="flex justify-center gap-4"
+          >
+            <Button
+              size="lg"
+              onClick={handleGenerateMore}
+              disabled={isLoading}
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Sparkles className="w-4 h-4 mr-2" />
+              )}
+              Show me another movie
+            </Button>
+          </motion.div>
+
+          {error && (
+            <div className="text-center text-destructive">
+              {error}
+            </div>
+          )}
+        </motion.div>
+      </div>
     </div>
   )
 } 

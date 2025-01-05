@@ -1,11 +1,10 @@
 'use client'
 
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useRef, useCallback, useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
-import { useLanguage } from '@/lib/language-context'
-import { Camera as CameraIcon } from 'lucide-react'
-import { analyzeImage } from '@/lib/face-api'
-import { loadModels } from '@/lib/face-api-loader'
+import { Card } from '@/components/ui/card'
+import { Camera as CameraIcon, Loader2 } from 'lucide-react'
+import * as faceapi from 'face-api.js'
 
 interface CameraProps {
   onCapture: (imageData: string, emotions: any) => void
@@ -13,44 +12,56 @@ interface CameraProps {
 }
 
 export function Camera({ onCapture, isLoading }: CameraProps) {
-  const [cameraActive, setCameraActive] = useState(false)
-  const [capturedImage, setCapturedImage] = useState<string | null>(null)
-  const [error, setError] = useState<string | null>(null)
-  const [isInitializing, setIsInitializing] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
-  const { t } = useLanguage()
+  const [isCameraReady, setIsCameraReady] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
-  const startCamera = useCallback(async () => {
+  // Load face-api models
+  const loadModels = useCallback(async () => {
     try {
-      setError(null)
-      setIsInitializing(true)
+      await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+        faceapi.nets.faceExpressionNet.loadFromUri('/models')
+      ])
+      return true
+    } catch (err) {
+      console.error('Error loading models:', err)
+      setError('Failed to load face detection models')
+      return false
+    }
+  }, [])
 
-      // Load face-api.js models
-      await loadModels()
+  // Initialize camera
+  const initializeCamera = useCallback(async () => {
+    try {
+      if (!videoRef.current) return
+      
+      const modelsLoaded = await loadModels()
+      if (!modelsLoaded) return
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode: 'user',
           width: { ideal: 1280 },
-          height: { ideal: 720 }
+          height: { ideal: 720 },
+          facingMode: 'user'
         }
       })
-      
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
-        streamRef.current = stream
-        setCameraActive(true)
-      }
+
+      videoRef.current.srcObject = stream
+      streamRef.current = stream
+      setIsCameraReady(true)
+      setError(null)
     } catch (err) {
       console.error('Error accessing camera:', err)
-      setError(t('camera.error'))
-    } finally {
-      setIsInitializing(false)
+      setError('Unable to access camera')
+      setIsCameraReady(false)
     }
-  }, [t])
+  }, [loadModels])
 
-  const stopCamera = useCallback(() => {
+  // Cleanup function
+  const cleanup = useCallback(() => {
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop())
       streamRef.current = null
@@ -58,114 +69,97 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
     if (videoRef.current) {
       videoRef.current.srcObject = null
     }
-    setCameraActive(false)
+    setIsCameraReady(false)
   }, [])
 
+  // Initialize on mount
+  useEffect(() => {
+    initializeCamera()
+    return cleanup
+  }, [initializeCamera, cleanup])
+
+  // Handle capture
   const handleCapture = useCallback(async () => {
-    if (!videoRef.current) return
+    if (!videoRef.current || !canvasRef.current || isLoading) return
 
     try {
-      setError(null)
-      const canvas = document.createElement('canvas')
-      canvas.width = videoRef.current.videoWidth
-      canvas.height = videoRef.current.videoHeight
-      const ctx = canvas.getContext('2d')
-      if (!ctx) throw new Error('Could not get canvas context')
+      const video = videoRef.current
+      const canvas = canvasRef.current
+      const context = canvas.getContext('2d')
+      if (!context) return
 
-      // Flip the image horizontally to match the mirrored preview
-      ctx.translate(canvas.width, 0)
-      ctx.scale(-1, 1)
-      ctx.drawImage(videoRef.current, 0, 0)
+      // Set canvas dimensions to match video
+      canvas.width = video.videoWidth
+      canvas.height = video.videoHeight
 
+      // Draw video frame to canvas
+      context.drawImage(video, 0, 0, canvas.width, canvas.height)
+
+      // Detect face and emotions
+      const detection = await faceapi
+        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
+        .withFaceExpressions()
+
+      if (!detection) {
+        setError('No face detected. Please ensure your face is clearly visible.')
+        return
+      }
+
+      // Get image data
       const imageData = canvas.toDataURL('image/jpeg')
-      setCapturedImage(imageData)
-      stopCamera()
 
-      // Analyze the image for emotions
-      const emotions = await analyzeImage(imageData)
-      
-      // Pass both the image and emotions to the parent
+      // Extract emotions
+      const emotions = detection.expressions
+
+      // Call onCapture with image and emotions
       onCapture(imageData, emotions)
     } catch (err) {
       console.error('Error capturing image:', err)
-      setError(t('camera.error'))
+      setError('Failed to capture and analyze image')
     }
-  }, [onCapture, stopCamera, t])
-
-  const handleRetry = useCallback(() => {
-    setCapturedImage(null)
-    startCamera()
-  }, [startCamera])
-
-  useEffect(() => {
-    return () => {
-      stopCamera()
-    }
-  }, [stopCamera])
+  }, [onCapture, isLoading])
 
   return (
-    <div className="space-y-4">
-      <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
-        {!capturedImage ? (
-          <video
-            ref={videoRef}
-            autoPlay
-            playsInline
-            muted
-            onCanPlay={() => videoRef.current?.play()}
-            className="absolute inset-0 w-full h-full object-cover transform scale-x-[-1]"
-          />
-        ) : (
-          <img
-            src={capturedImage}
-            alt="Captured"
-            className="absolute inset-0 w-full h-full object-cover"
-          />
+    <Card className="overflow-hidden">
+      <div className="relative aspect-video bg-muted">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="w-full h-full object-cover"
+          onLoadedMetadata={() => setIsCameraReady(true)}
+        />
+        <canvas ref={canvasRef} className="hidden" />
+        
+        {error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+            <p className="text-destructive text-center p-4">{error}</p>
+          </div>
         )}
-
-        <div className="absolute inset-0 flex items-center justify-center">
-          {!cameraActive && !capturedImage && (
-            <Button
-              onClick={startCamera}
-              disabled={isLoading || isInitializing}
-              className="flex items-center gap-2"
-            >
-              {isLoading ? (
-                t('loading.camera')
-              ) : isInitializing ? (
-                'Initializing...'
-              ) : (
-                <>
-                  <CameraIcon className="w-4 h-4" />
-                  {t('camera.start')}
-                </>
-              )}
-            </Button>
-          )}
-        </div>
+        
+        {!isCameraReady && !error && (
+          <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+            <Loader2 className="w-8 h-8 animate-spin" />
+          </div>
+        )}
       </div>
 
-      {cameraActive && !capturedImage && (
-        <div className="flex justify-center">
-          <Button onClick={handleCapture} className="w-full max-w-sm">
-            {t('camera.capture')}
-          </Button>
-        </div>
-      )}
-
-      {capturedImage && !isLoading && (
-        <div className="flex justify-center gap-4">
-          <Button onClick={handleRetry} variant="outline">
-            {t('camera.retake')}
-          </Button>
-        </div>
-      )}
-
-      {error && (
-        <div className="text-center text-destructive">
-          {error}
-        </div>
-      )}
-    </div>
+      <div className="p-4 flex justify-center">
+        <Button
+          size="lg"
+          onClick={handleCapture}
+          disabled={!isCameraReady || isLoading}
+          className="w-full max-w-xs"
+        >
+          {isLoading ? (
+            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+          ) : (
+            <CameraIcon className="w-4 h-4 mr-2" />
+          )}
+          Take a Selfie
+        </Button>
+      </div>
+    </Card>
   )
 } 

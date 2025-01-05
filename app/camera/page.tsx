@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState, useEffect } from 'react'
+import { useCallback, useState, useEffect, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { Camera } from '@/components/camera'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -25,6 +25,61 @@ interface EmotionData {
   surprise: number
 }
 
+const TransitionAnimation = ({ isTransitioning }: { isTransitioning: boolean }) => {
+  const particles = useMemo(() => {
+    return [...Array(8)].map((_, i) => ({
+      left: `${50 + Math.cos(i * Math.PI / 4) * 100}%`,
+      top: `${50 + Math.sin(i * Math.PI / 4) * 100}%`,
+      delay: i * 0.1
+    }))
+  }, [])
+
+  if (!isTransitioning) return null
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 bg-background flex items-center justify-center"
+    >
+      <div className="relative">
+        <motion.div
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", duration: 0.5 }}
+          className="relative"
+        >
+          <Wand2 className="w-16 h-16 text-primary animate-pulse" />
+          <Stars className="w-8 h-8 text-primary absolute -top-4 -right-4 animate-bounce" />
+          <Sparkles className="w-8 h-8 text-primary absolute -bottom-4 -left-4 animate-bounce" />
+        </motion.div>
+
+        {particles.map((particle, i) => (
+          <motion.div
+            key={i}
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ 
+              scale: [0, 1, 0],
+              opacity: [0, 1, 0]
+            }}
+            transition={{ 
+              duration: 1,
+              delay: particle.delay,
+              ease: "easeInOut"
+            }}
+            className="absolute w-1 h-1 bg-primary rounded-full"
+            style={{
+              left: particle.left,
+              top: particle.top
+            }}
+          />
+        ))}
+      </div>
+    </motion.div>
+  )
+}
+
 export default function CameraPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
@@ -34,56 +89,54 @@ export default function CameraPage() {
   const router = useRouter()
   const { t } = useLanguage()
 
-  useEffect(() => {
-    const viewingMode = sessionStorage.getItem('viewingMode')
-    const numberOfPeople = sessionStorage.getItem('numberOfPeople')
-    const currentPersonIndex = sessionStorage.getItem('currentPersonIndex')
-    const selectedPlatforms = sessionStorage.getItem('selectedPlatforms')
+  const sessionValues = useMemo(() => {
+    return {
+      viewingMode: sessionStorage.getItem('viewingMode'),
+      numberOfPeople: sessionStorage.getItem('numberOfPeople'),
+      currentPersonIndex: sessionStorage.getItem('currentPersonIndex'),
+      selectedPlatforms: sessionStorage.getItem('selectedPlatforms')
+    }
+  }, [])
 
-    // If we don't have viewing mode or platforms selected, redirect to home
+  useEffect(() => {
+    const { viewingMode, numberOfPeople, currentPersonIndex, selectedPlatforms } = sessionValues
+
     if (!viewingMode) {
       router.push('/')
       return
     }
 
-    // If we don't have platforms selected, redirect to platforms page
     if (!selectedPlatforms) {
       router.push('/streaming-platforms')
       return
     }
 
-    // For group mode, check if we have number of people
     if (viewingMode === 'group' && !numberOfPeople) {
       router.push('/group-setup')
       return
     }
 
-    // Set up group mode state if applicable
     if (viewingMode === 'group' && numberOfPeople) {
       setTotalPeople(parseInt(numberOfPeople))
       setCurrentPerson(currentPersonIndex ? parseInt(currentPersonIndex) : 0)
     }
-  }, [router])
+  }, [router, sessionValues])
 
   const handleImageCapture = useCallback(async (imageData: string, emotions: EmotionData) => {
+    if (isLoading) return
+    
     try {
       setIsLoading(true)
       setError(null)
 
-      // Get selected platforms and viewing mode
-      const selectedPlatforms = sessionStorage.getItem('selectedPlatforms')
-      const viewingMode = sessionStorage.getItem('viewingMode')
+      const { viewingMode, selectedPlatforms } = sessionValues
       const platforms = selectedPlatforms ? JSON.parse(selectedPlatforms) : []
 
       if (viewingMode === 'solo') {
-        // Solo mode - direct analysis
         const response = await fetch('/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            emotions,
-            platforms
-          })
+          body: JSON.stringify({ emotions, platforms })
         })
 
         const data = await response.json()
@@ -92,20 +145,14 @@ export default function CameraPage() {
           throw new Error(data.error || t('movies.error'))
         }
 
-        // Store the data in sessionStorage
         sessionStorage.setItem('movieData', JSON.stringify(data))
         sessionStorage.setItem('emotions', JSON.stringify(data.emotions))
         sessionStorage.setItem('previousMovies', JSON.stringify(data.movies.map((m: Movie) => m.title)))
-
       } else {
-        // Group mode - collect emotions from all users
         const response = await fetch('/api/analyze', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            emotions,
-            analyzeOnly: true
-          })
+          body: JSON.stringify({ emotions, analyzeOnly: true })
         })
 
         const data = await response.json()
@@ -114,32 +161,24 @@ export default function CameraPage() {
           throw new Error(data.error || t('movies.error'))
         }
 
-        // Get existing group emotions
         const storedEmotions = sessionStorage.getItem('groupEmotions')
         const groupEmotions = storedEmotions ? JSON.parse(storedEmotions) : []
         
-        // Add new emotions to the group
         groupEmotions.push(data.emotions)
         sessionStorage.setItem('groupEmotions', JSON.stringify(groupEmotions))
         
-        // Update current person index
         const newIndex = currentPerson + 1
         sessionStorage.setItem('currentPersonIndex', newIndex.toString())
 
         if (newIndex < totalPeople) {
-          // More people to capture
           setCurrentPerson(newIndex)
           setIsLoading(false)
           return
         } else {
-          // All emotions collected, get movie suggestions
           const response = await fetch('/api/analyze', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              groupEmotions,
-              platforms
-            })
+            body: JSON.stringify({ groupEmotions, platforms })
           })
 
           const movieData = await response.json()
@@ -148,94 +187,41 @@ export default function CameraPage() {
             throw new Error(movieData.error || t('movies.error'))
           }
 
-          // Store the final data
           sessionStorage.setItem('movieData', JSON.stringify(movieData))
           sessionStorage.setItem('emotions', JSON.stringify(movieData.emotions))
           sessionStorage.setItem('previousMovies', JSON.stringify(movieData.movies.map((m: Movie) => m.title)))
         }
       }
 
-      // Start the transition animation
       setIsTransitioning(true)
-
-      // Wait for the animation to complete before navigating
       setTimeout(() => {
         router.push('/movie-reveal')
       }, 2000)
     } catch (err) {
       console.error('Error:', err)
-      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
-      setError(errorMessage)
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred')
       setIsLoading(false)
     }
-  }, [router, t, currentPerson, totalPeople])
+  }, [router, t, currentPerson, totalPeople, sessionValues, isLoading])
 
   return (
     <>
-      <AnimatePresence>
-        {isTransitioning && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background flex items-center justify-center"
-          >
-            <div className="relative">
-              <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: 1 }}
-                transition={{ type: "spring", duration: 1 }}
-                className="relative"
-              >
-                <Wand2 className="w-16 h-16 text-primary animate-pulse" />
-                <Stars className="w-8 h-8 text-primary absolute -top-4 -right-4 animate-bounce" />
-                <Sparkles className="w-8 h-8 text-primary absolute -bottom-4 -left-4 animate-bounce" />
-              </motion.div>
-
-              {/* Floating particles */}
-              {[...Array(20)].map((_, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ 
-                    x: 0, 
-                    y: 0, 
-                    scale: 0,
-                    opacity: 0 
-                  }}
-                  animate={{ 
-                    x: Math.random() * 400 - 200,
-                    y: Math.random() * 400 - 200,
-                    scale: [0, 1, 0],
-                    opacity: [0, 1, 0]
-                  }}
-                  transition={{ 
-                    duration: 2,
-                    delay: Math.random() * 0.5,
-                    ease: "easeInOut"
-                  }}
-                  className="absolute w-1 h-1 bg-primary rounded-full"
-                />
-              ))}
-            </div>
-          </motion.div>
-        )}
+      <AnimatePresence mode="wait">
+        <TransitionAnimation isTransitioning={isTransitioning} />
       </AnimatePresence>
 
       <div className="min-h-screen p-6 space-y-12">
         <motion.h1
           className="text-4xl md:text-5xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600"
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.3 }}
         >
           MoodFlix ✨
         </motion.h1>
 
         {totalPeople > 1 && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="text-center space-y-2"
-          >
+          <div className="text-center space-y-2">
             <div className="flex items-center justify-center gap-2">
               <Users className="w-5 h-5" />
               <span className="text-lg font-medium">
@@ -245,26 +231,17 @@ export default function CameraPage() {
             <p className="text-sm text-muted-foreground">
               Let's capture your mood!
             </p>
-          </motion.div>
+          </div>
         )}
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="max-w-6xl mx-auto space-y-12"
-        >
+        <div className="max-w-6xl mx-auto space-y-12">
           <Camera onCapture={handleImageCapture} isLoading={isLoading} />
           {error && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center text-destructive"
-            >
+            <div className="text-center text-destructive">
               {error}
-            </motion.div>
+            </div>
           )}
-        </motion.div>
+        </div>
       </div>
     </>
   )
