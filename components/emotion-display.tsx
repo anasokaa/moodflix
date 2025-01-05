@@ -1,13 +1,13 @@
 import { Card, CardContent } from "@/components/ui/card"
-import { Smile, Frown, Angry, Meh, Ghost, Heart, AlertCircle } from 'lucide-react'
+import { Smile, Frown, Angry, Meh, AlertCircle, Heart, Dizzy } from 'lucide-react'
 
 const emotionIcons = {
-  happiness: { icon: Heart, label: "Happy" },
+  happiness: { icon: Smile, label: "Happy" },
   sadness: { icon: Frown, label: "Sad" },
   anger: { icon: Angry, label: "Angry" },
   surprise: { icon: AlertCircle, label: "Surprised" },
   neutral: { icon: Meh, label: "Neutral" },
-  fear: { icon: Ghost, label: "Fearful" },
+  fear: { icon: Dizzy, label: "Fearful" },
   disgust: { icon: Angry, label: "Disgusted" }
 }
 
