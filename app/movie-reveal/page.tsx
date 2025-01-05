@@ -61,6 +61,7 @@ export default function MovieRevealPage() {
     try {
       const storedEmotions = sessionStorage.getItem('emotions')
       const storedMovies = sessionStorage.getItem('previousMovies')
+      const selectedPlatforms = sessionStorage.getItem('selectedPlatforms')
       
       if (!storedEmotions) {
         throw new Error('No emotion data found')
@@ -68,6 +69,7 @@ export default function MovieRevealPage() {
 
       const emotions = JSON.parse(storedEmotions) as EmotionData
       const previousMovies = storedMovies ? JSON.parse(storedMovies) as string[] : []
+      const platforms = selectedPlatforms ? JSON.parse(selectedPlatforms) as string[] : []
 
       const response = await fetch('/api/analyze', {
         method: 'POST',
@@ -75,7 +77,8 @@ export default function MovieRevealPage() {
         body: JSON.stringify({ 
           image: 'regenerate',
           emotions,
-          previousMovies
+          previousMovies,
+          platforms
         })
       })
 
