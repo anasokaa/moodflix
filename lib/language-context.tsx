@@ -15,8 +15,10 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('en')
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
+    setIsClient(true)
     const savedLanguage = localStorage.getItem('language') as Language
     if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'fr')) {
       setLanguage(savedLanguage)
@@ -25,7 +27,9 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
   const handleSetLanguage = (lang: Language) => {
     setLanguage(lang)
-    localStorage.setItem('language', lang)
+    if (isClient) {
+      localStorage.setItem('language', lang)
+    }
   }
 
   const t = (key: string, params?: Record<string, any>) => {
