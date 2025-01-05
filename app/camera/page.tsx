@@ -6,6 +6,7 @@ import { Camera } from '@/components/camera'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '@/lib/language-context'
 import { Sparkles, Stars, Wand2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 interface Movie {
   title: string
@@ -28,17 +29,22 @@ interface EmotionData {
 export default function CameraPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isTransitioning, setIsTransitioning] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const { t } = useLanguage()
 
   const handleImageCapture = useCallback(async (imageData: string) => {
     try {
       setIsLoading(true)
+      setError(null)
+      console.log('Starting image analysis...')
 
       // Get selected platforms from sessionStorage
       const selectedPlatforms = sessionStorage.getItem('selectedPlatforms')
       const platforms = selectedPlatforms ? JSON.parse(selectedPlatforms) : []
+      console.log('Selected platforms:', platforms)
 
+      console.log('Sending request to /api/analyze...')
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -48,27 +54,47 @@ export default function CameraPage() {
         })
       })
 
+      console.log('Response status:', response.status)
       const data = await response.json()
+      console.log('Response data:', data)
       
       if (!response.ok) {
-        throw new Error(data.error || t('movies.error'))
+        const errorMessage = data.error || t('movies.error')
+        console.error('API Error:', errorMessage)
+        setError(errorMessage)
+        throw new Error(errorMessage)
       }
 
+      if (!data.movies || data.movies.length === 0) {
+        console.error('No movies returned from API')
+        setError('No movie suggestions found. Please try again.')
+        throw new Error('No movies returned')
+      }
+
+      console.log('Storing data in sessionStorage...')
       // Store the data in sessionStorage
       sessionStorage.setItem('movieData', JSON.stringify(data))
       sessionStorage.setItem('emotions', JSON.stringify(data.emotions))
       sessionStorage.setItem('previousMovies', JSON.stringify(data.movies.map((m: Movie) => m.title)))
 
       // Start the transition animation
+      console.log('Starting transition animation...')
       setIsTransitioning(true)
 
       // Wait for the animation to complete before navigating
       setTimeout(() => {
+        console.log('Navigating to movie reveal page...')
         router.push('/movie-reveal')
       }, 2000)
     } catch (err) {
-      console.error('Error:', err)
-      setIsLoading(false)
+      console.error('Error in handleImageCapture:', err)
+      const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred'
+      setError(errorMessage)
+      toast.error(errorMessage)
+    } finally {
+      if (!isTransitioning) {
+        setIsLoading(false)
+      }
     }
   }, [router, t])
 
@@ -163,6 +189,15 @@ export default function CameraPage() {
           className="max-w-6xl mx-auto space-y-12"
         >
           <Camera onCapture={handleImageCapture} isLoading={isLoading} />
+          {error && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center text-destructive"
+            >
+              {error}
+            </motion.div>
+          )}
         </motion.div>
       </div>
     </>
