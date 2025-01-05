@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import { Camera } from '@/components/camera'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '@/lib/language-context'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Stars, Wand2 } from 'lucide-react'
 
 interface Movie {
   title: string
@@ -58,7 +58,7 @@ export default function ClientPage() {
       // Wait for the animation to complete before navigating
       setTimeout(() => {
         router.push('/movie-reveal')
-      }, 1000)
+      }, 2000)
     } catch (err) {
       console.error('Error:', err)
       setIsLoading(false)
@@ -73,17 +73,68 @@ export default function ClientPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 bg-background"
+            className="fixed inset-0 z-50 bg-black"
           >
-            <div className="h-full flex items-center justify-center">
+            <div className="h-full flex items-center justify-center relative overflow-hidden">
+              {/* Magic circle */}
               <motion.div
-                initial={{ scale: 0 }}
-                animate={{ scale: [1, 1.2, 0] }}
-                transition={{ duration: 1, times: [0, 0.5, 1] }}
-                className="text-6xl"
+                initial={{ scale: 0, rotate: 0 }}
+                animate={{ scale: [0, 1.5, 3], rotate: 360 }}
+                transition={{ duration: 2, ease: "easeInOut" }}
+                className="absolute w-32 h-32 rounded-full border-2 border-primary/30"
+              />
+              
+              {/* Inner circle with sparkles */}
+              <motion.div
+                initial={{ scale: 0, rotate: 0 }}
+                animate={{ scale: [0, 1.2, 2], rotate: -360 }}
+                transition={{ duration: 2, ease: "easeInOut" }}
+                className="absolute w-24 h-24 rounded-full border-2 border-primary/50"
+              />
+
+              {/* Center sparkle */}
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ 
+                  scale: [1, 1.5, 0],
+                  opacity: [0, 1, 0]
+                }}
+                transition={{ 
+                  duration: 2,
+                  times: [0, 0.5, 1],
+                  ease: "easeInOut"
+                }}
+                className="relative"
               >
-                <Sparkles className="w-16 h-16 text-primary animate-pulse" />
+                <Wand2 className="w-16 h-16 text-primary animate-pulse absolute -left-8 -top-8" />
+                <Stars className="w-16 h-16 text-purple-500 animate-pulse absolute -right-8 -top-8" />
+                <Sparkles className="w-16 h-16 text-yellow-500 animate-pulse" />
               </motion.div>
+
+              {/* Floating particles */}
+              {[...Array(20)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  initial={{ 
+                    x: 0, 
+                    y: 0, 
+                    scale: 0,
+                    opacity: 0 
+                  }}
+                  animate={{ 
+                    x: Math.random() * 400 - 200,
+                    y: Math.random() * 400 - 200,
+                    scale: [0, 1, 0],
+                    opacity: [0, 1, 0]
+                  }}
+                  transition={{ 
+                    duration: 2,
+                    delay: Math.random() * 0.5,
+                    ease: "easeInOut"
+                  }}
+                  className="absolute w-1 h-1 bg-primary rounded-full"
+                />
+              ))}
             </div>
           </motion.div>
         )}

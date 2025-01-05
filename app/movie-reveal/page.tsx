@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { MovieSuggestions } from '@/components/movie-suggestions'
+import { EmotionDisplay } from '@/components/emotion-display'
 import { useLanguage } from '@/lib/language-context'
 
 export default function MovieRevealPage() {
@@ -63,35 +64,50 @@ export default function MovieRevealPage() {
   const storedData = typeof window !== 'undefined' ? sessionStorage.getItem('movieData') : null
   const data = storedData ? JSON.parse(storedData) : { movies: [], emotions: null }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-primary/5 py-12">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5 }}
-        className="container mx-auto px-4"
-      >
-        <motion.h1
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="text-4xl md:text-5xl font-bold text-center mb-12 bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600"
-        >
-          Your Perfect Movie Match ✨
-        </motion.h1>
+  // Get the dominant emotion
+  const dominantEmotion = data.emotions ? 
+    Object.entries(data.emotions).reduce((a, b) => a[1] > b[1] ? a : b)[0] 
+    : null
 
-        <MovieSuggestions
-          movies={data.movies}
-          emotions={data.emotions}
-          onGenerateMore={handleGenerateMore}
-        />
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-black via-background to-primary/5 py-12">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 1 }}
+        className="container mx-auto px-4 space-y-8"
+      >
+        {/* Emotion Display */}
+        {dominantEmotion && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5 }}
+            className="max-w-md mx-auto"
+          >
+            <EmotionDisplay emotion={dominantEmotion} />
+          </motion.div>
+        )}
+
+        {/* Movie Suggestions */}
+        <motion.div
+          initial={{ opacity: 0, y: 50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.8 }}
+        >
+          <MovieSuggestions
+            movies={data.movies}
+            emotions={data.emotions}
+            onGenerateMore={handleGenerateMore}
+          />
+        </motion.div>
 
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8 }}
+          transition={{ delay: 1.2 }}
           onClick={() => router.push('/')}
-          className="mt-8 mx-auto block px-6 py-3 rounded-full bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-all duration-300"
+          className="mx-auto block px-6 py-3 rounded-full bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-all duration-300"
         >
           ← Take Another Photo
         </motion.button>
