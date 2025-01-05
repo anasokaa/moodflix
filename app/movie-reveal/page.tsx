@@ -7,6 +7,33 @@ import { MovieSuggestions } from '@/components/movie-suggestions'
 import { EmotionDisplay } from '@/components/emotion-display'
 import { useLanguage } from '@/lib/language-context'
 
+interface Movie {
+  title: string
+  description: string
+  matchReason: string
+  posterUrl: string
+  streamingPlatforms: string[]
+  funFact?: string
+  rating?: string
+  genre?: string
+}
+
+interface EmotionData {
+  anger: number
+  disgust: number
+  fear: number
+  happiness: number
+  neutral: number
+  sadness: number
+  surprise: number
+}
+
+interface StoredData {
+  movies: Movie[]
+  emotions: EmotionData
+  success?: boolean
+}
+
 export default function MovieRevealPage() {
   const router = useRouter()
   const { t } = useLanguage()
@@ -28,8 +55,8 @@ export default function MovieRevealPage() {
         throw new Error('No emotion data found')
       }
 
-      const emotions = JSON.parse(storedEmotions)
-      const previousMovies = storedMovies ? JSON.parse(storedMovies) : []
+      const emotions = JSON.parse(storedEmotions) as EmotionData
+      const previousMovies = storedMovies ? JSON.parse(storedMovies) as string[] : []
 
       const response = await fetch('/api/analyze', {
         method: 'POST',
@@ -50,7 +77,7 @@ export default function MovieRevealPage() {
       // Store the new movie data
       sessionStorage.setItem('movieData', JSON.stringify(data))
       if (data.movies) {
-        const updatedPreviousMovies = [...previousMovies, ...data.movies.map((m: any) => m.title)]
+        const updatedPreviousMovies = [...previousMovies, ...data.movies.map((m: Movie) => m.title)]
         sessionStorage.setItem('previousMovies', JSON.stringify(updatedPreviousMovies))
       }
 
@@ -62,7 +89,7 @@ export default function MovieRevealPage() {
   }
 
   const storedData = typeof window !== 'undefined' ? sessionStorage.getItem('movieData') : null
-  const data = storedData ? JSON.parse(storedData) : { movies: [], emotions: null }
+  const data: StoredData = storedData ? JSON.parse(storedData) : { movies: [], emotions: {} as EmotionData }
 
   // Get the dominant emotion
   const dominantEmotion = data.emotions ? 
