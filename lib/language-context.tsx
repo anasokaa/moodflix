@@ -13,21 +13,24 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
+function getStoredLanguage(): Language {
+  if (typeof window === 'undefined') return 'en'
+  return (localStorage.getItem('language') as Language) || 'en'
+}
+
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('en')
-  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    setIsClient(true)
-    const savedLanguage = localStorage.getItem('language') as Language
-    if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'fr')) {
-      setLanguage(savedLanguage)
+    const storedLang = getStoredLanguage()
+    if (storedLang && (storedLang === 'en' || storedLang === 'fr')) {
+      setLanguage(storedLang)
     }
   }, [])
 
   const handleSetLanguage = (lang: Language) => {
     setLanguage(lang)
-    if (isClient) {
+    if (typeof window !== 'undefined') {
       localStorage.setItem('language', lang)
     }
   }
