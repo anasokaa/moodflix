@@ -1,50 +1,45 @@
-import { Card, CardContent } from "@/components/ui/card"
-import { Smile, Frown, Angry, Meh, AlertCircle, Heart, Skull } from 'lucide-react'
+'use client'
 
-const emotionIcons = {
-  // Face++ API emotions
-  happiness: { icon: Smile, label: "Happy" },
-  sadness: { icon: Frown, label: "Sad" },
-  anger: { icon: Angry, label: "Angry" },
-  surprise: { icon: AlertCircle, label: "Surprised" },
-  neutral: { icon: Meh, label: "Neutral" },
-  fear: { icon: Skull, label: "Fearful" },
-  disgust: { icon: Angry, label: "Disgusted" },
-  
-  // Alternative spellings and variations
-  happy: { icon: Smile, label: "Happy" },
-  sad: { icon: Frown, label: "Sad" },
-  angry: { icon: Angry, label: "Angry" },
-  surprised: { icon: AlertCircle, label: "Surprised" },
-  fearful: { icon: Skull, label: "Fearful" },
-  disgusted: { icon: Angry, label: "Disgusted" }
-}
+import { useMemo } from 'react'
+import { Card } from '@/components/ui/card'
+import { Smile, Frown, Meh, Angry, Skull, Heart } from 'lucide-react'
 
 interface EmotionDisplayProps {
-  emotion: string
+  emotions?: Record<string, number>
+  emotion?: string
 }
 
-export function EmotionDisplay({ emotion }: EmotionDisplayProps) {
-  // Normalize the emotion string
-  const normalizedEmotion = emotion.toLowerCase().trim()
-  
-  // Get the emotion data or fallback to neutral
-  const emotionData = emotionIcons[normalizedEmotion as keyof typeof emotionIcons] || emotionIcons.neutral
-  const Icon = emotionData.icon
+const emotionIcons = {
+  happy: Smile,
+  sad: Frown,
+  neutral: Meh,
+  angry: Angry,
+  fearful: Skull,
+  surprised: Heart
+}
+
+export function EmotionDisplay({ emotions, emotion }: EmotionDisplayProps) {
+  const dominantEmotion = useMemo(() => {
+    if (emotion) return emotion
+
+    if (emotions) {
+      const [dominant] = Object.entries(emotions)
+        .sort(([, a], [, b]) => b - a)[0]
+      
+      return dominant.toLowerCase()
+    }
+
+    return 'neutral'
+  }, [emotions, emotion])
+
+  const Icon = emotionIcons[dominantEmotion as keyof typeof emotionIcons] || Meh
 
   return (
-    <Card className="bg-primary/5 border-none">
-      <CardContent className="flex items-center justify-center gap-4 p-6">
-        <Icon className="w-8 h-8 text-primary" />
-        <div className="text-center">
-          <h3 className="text-xl font-semibold capitalize">
-            {emotionData.label} Mood
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            Here's a movie that matches your current mood
-          </p>
-        </div>
-      </CardContent>
+    <Card className="p-4 inline-flex items-center gap-2 bg-primary/10">
+      <Icon className="w-5 h-5 text-primary" />
+      <span className="font-medium capitalize">
+        {dominantEmotion} mood
+      </span>
     </Card>
   )
 } 
