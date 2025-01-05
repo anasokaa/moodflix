@@ -1,227 +1,160 @@
 'use client'
 
-import { useRef, useState, useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/lib/language-context'
-import { motion } from 'framer-motion'
 import { Camera as CameraIcon } from 'lucide-react'
+import { analyzeImage } from '@/lib/face-api'
 
-export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string) => void, isLoading: boolean }) {
+interface CameraProps {
+  onCapture: (imageData: string, emotions: any) => void
+  isLoading: boolean
+}
+
+export function Camera({ onCapture, isLoading }: CameraProps) {
+  const [cameraActive, setCameraActive] = useState(false)
+  const [capturedImage, setCapturedImage] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
-  const [isActive, setIsActive] = useState(false)
-  const [error, setError] = useState<string>()
   const { t } = useLanguage()
-  const [isInitializing, setIsInitializing] = useState(false)
-
-  // Clean up function to stop all tracks
-  const stopAllTracks = useCallback(() => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop())
-      streamRef.current = null
-    }
-  }, [])
 
   const startCamera = useCallback(async () => {
     try {
-      setIsInitializing(true)
-      console.log('Starting camera initialization...')
-      // First, clean up any existing streams
-      stopAllTracks()
-      setError(undefined)
-      setIsActive(false)
-
-      if (!videoRef.current) {
-        console.error('Video element not found')
-        throw new Error('Video element not found')
-      }
-
-      console.log('Requesting camera access...')
+      setError(null)
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'user',
           width: { ideal: 1280 },
           height: { ideal: 720 }
-        },
-        audio: false
+        }
       })
       
-      console.log('Camera access granted, setting up video stream...')
-      streamRef.current = stream
-      videoRef.current.srcObject = stream
-
-      // Wait for video metadata to load
-      await new Promise<void>((resolve) => {
-        if (!videoRef.current) return
-        videoRef.current.onloadedmetadata = () => {
-          console.log('Video metadata loaded')
-          resolve()
-        }
-      })
-
-      // Start playing the video
-      console.log('Starting video playback...')
-      await videoRef.current.play()
-      console.log('Video playback started successfully')
-      setIsActive(true)
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream
+        streamRef.current = stream
+        setCameraActive(true)
+      }
     } catch (err) {
       console.error('Error accessing camera:', err)
-      if (err instanceof DOMException) {
-        if (err.name === 'NotAllowedError') {
-          setError(t('camera.permission'))
-        } else if (err.name === 'NotReadableError') {
-          setError(t('camera.inUse'))
-        } else if (err.name === 'NotFoundError') {
-          setError(t('camera.notFound'))
-        } else {
-          setError(t('camera.error'))
-        }
-      } else {
-        setError(t('camera.error'))
-      }
-      stopAllTracks()
-    } finally {
-      setIsInitializing(false)
+      setError(t('camera.error'))
     }
-  }, [t, stopAllTracks])
+  }, [t])
 
-  const captureImage = useCallback(() => {
+  const stopCamera = useCallback(() => {
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop())
+      streamRef.current = null
+    }
+    if (videoRef.current) {
+      videoRef.current.srcObject = null
+    }
+    setCameraActive(false)
+  }, [])
+
+  const handleCapture = useCallback(async () => {
     if (!videoRef.current) return
 
     try {
+      setError(null)
       const canvas = document.createElement('canvas')
       canvas.width = videoRef.current.videoWidth
       canvas.height = videoRef.current.videoHeight
-      
       const ctx = canvas.getContext('2d')
-      if (!ctx) {
-        throw new Error('Could not get canvas context')
-      }
-      
-      // Flip horizontally to mirror the image
+      if (!ctx) throw new Error('Could not get canvas context')
+
+      // Flip the image horizontally to match the mirrored preview
       ctx.translate(canvas.width, 0)
       ctx.scale(-1, 1)
-      
       ctx.drawImage(videoRef.current, 0, 0)
-      const imageData = canvas.toDataURL('image/jpeg', 0.8)
 
-      // Stop the camera stream
-      stopAllTracks()
-      setIsActive(false)
+      const imageData = canvas.toDataURL('image/jpeg')
+      setCapturedImage(imageData)
+      stopCamera()
+
+      // Analyze the image for emotions
+      const emotions = await analyzeImage(imageData)
       
-      onCapture(imageData)
+      // Pass both the image and emotions to the parent
+      onCapture(imageData, emotions)
     } catch (err) {
       console.error('Error capturing image:', err)
       setError(t('camera.error'))
     }
-  }, [onCapture, t, stopAllTracks])
+  }, [onCapture, stopCamera, t])
 
-  // Clean up camera stream when component unmounts
+  const handleRetry = useCallback(() => {
+    setCapturedImage(null)
+    startCamera()
+  }, [startCamera])
+
   useEffect(() => {
-    return stopAllTracks
-  }, [stopAllTracks])
-
-  if (error) {
-    return (
-      <div className="w-full max-w-md mx-auto p-6 text-center space-y-4">
-        <p className="text-lg text-destructive">{error}</p>
-        <motion.button
-          onClick={() => {
-            setError(undefined)
-            startCamera()
-          }}
-          className="px-6 py-3 bg-primary text-primary-foreground rounded-full font-medium"
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          {t('camera.retake')}
-        </motion.button>
-      </div>
-    )
-  }
+    return () => {
+      stopCamera()
+    }
+  }, [stopCamera])
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
-      <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-primary/10">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="w-full h-full object-cover transform scale-x-[-1]"
-          style={{ display: isActive ? 'block' : 'none' }}
-        />
-        
-        {isActive && (
-          <>
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <motion.div 
-                className="w-64 h-64 border-2 border-dashed border-white/30 rounded-full"
-                animate={{
-                  scale: [1, 1.05, 1],
-                  opacity: [0.3, 0.5, 0.3]
-                }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  ease: "easeInOut"
-                }}
-              />
-            </div>
-            
-            <motion.button
-              onClick={captureImage}
-              className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-primary text-primary-foreground rounded-full p-4 shadow-lg"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              disabled={isLoading}
-            >
-              <CameraIcon className="w-8 h-8" />
-            </motion.button>
-          </>
+    <div className="space-y-4">
+      <div className="relative aspect-video rounded-lg overflow-hidden bg-black">
+        {!capturedImage ? (
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            onCanPlay={() => videoRef.current?.play()}
+            className="absolute inset-0 w-full h-full object-cover transform scale-x-[-1]"
+          />
+        ) : (
+          <img
+            src={capturedImage}
+            alt="Captured"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
         )}
 
-        {!isActive && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 p-6">
-            {isLoading ? (
-              <motion.div
-                className="flex flex-col items-center gap-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                <p className="text-lg font-medium text-primary">{t('camera.analyzing')}</p>
-              </motion.div>
-            ) : isInitializing ? (
-              <motion.div
-                className="flex flex-col items-center gap-4"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-                <p className="text-lg font-medium text-primary">Initializing camera...</p>
-              </motion.div>
-            ) : (
-              <motion.button
-                onClick={startCamera}
-                className="flex items-center gap-2 bg-primary text-primary-foreground px-8 py-4 rounded-full font-medium text-lg shadow-lg"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <CameraIcon className="w-6 h-6" />
-                {t('camera.start')}
-              </motion.button>
-            )}
-          </div>
-        )}
+        <div className="absolute inset-0 flex items-center justify-center">
+          {!cameraActive && !capturedImage && (
+            <Button
+              onClick={startCamera}
+              disabled={isLoading}
+              className="flex items-center gap-2"
+            >
+              {isLoading ? (
+                t('loading.camera')
+              ) : (
+                <>
+                  <CameraIcon className="w-4 h-4" />
+                  {t('camera.start')}
+                </>
+              )}
+            </Button>
+          )}
+        </div>
       </div>
-      
-      {/* Debug info */}
-      <div className="mt-4 text-sm text-primary/60">
-        <p>Camera status: {isActive ? 'Active' : 'Inactive'}</p>
-        <p>Loading: {isLoading ? 'Yes' : 'No'}</p>
-        <p>Initializing: {isInitializing ? 'Yes' : 'No'}</p>
-        {error && <p className="text-destructive">Error: {error}</p>}
-      </div>
+
+      {cameraActive && !capturedImage && (
+        <div className="flex justify-center">
+          <Button onClick={handleCapture} className="w-full max-w-sm">
+            {t('camera.capture')}
+          </Button>
+        </div>
+      )}
+
+      {capturedImage && !isLoading && (
+        <div className="flex justify-center gap-4">
+          <Button onClick={handleRetry} variant="outline">
+            {t('camera.retake')}
+          </Button>
+        </div>
+      )}
+
+      {error && (
+        <div className="text-center text-destructive">
+          {error}
+        </div>
+      )}
     </div>
   )
 } 

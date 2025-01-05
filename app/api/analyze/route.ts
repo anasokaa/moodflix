@@ -1,11 +1,17 @@
 import { NextResponse } from 'next/server'
-import { analyzeImage } from '@/lib/face-api'
 import { getMovieSuggestions } from '@/lib/gemini-api'
 
 export async function POST(request: Request) {
   try {
     const data = await request.json()
-    const { image, platforms = [], previousMovies = [], analyzeOnly = false, groupEmotions = null } = data
+    const { 
+      image, 
+      platforms = [], 
+      previousMovies = [], 
+      analyzeOnly = false, 
+      groupEmotions = null,
+      emotions = null 
+    } = data
 
     // Group mode with all emotions collected
     if (groupEmotions) {
@@ -32,42 +38,38 @@ export async function POST(request: Request) {
     }
 
     // Regenerate suggestions for existing emotions
-    if (image === 'regenerate' && data.emotions) {
+    if (image === 'regenerate' && emotions) {
       console.log('Regenerating movie suggestions for existing emotions')
-      const movies = await getMovieSuggestions(data.emotions, 'en', previousMovies, platforms)
+      const movies = await getMovieSuggestions(emotions, 'en', previousMovies, platforms)
       return NextResponse.json({
         success: true,
         movies,
-        emotions: data.emotions
-      })
-    }
-
-    // New image analysis
-    if (!image || typeof image !== 'string') {
-      throw new Error('Invalid image data')
-    }
-
-    console.log('Analyzing new image')
-    const emotions = await analyzeImage(image)
-    
-    // If analyzeOnly is true, return just the emotions (for group mode)
-    if (analyzeOnly) {
-      console.log('Analyze only mode: returning emotions')
-      return NextResponse.json({
-        success: true,
         emotions
       })
     }
 
-    // Get movie suggestions for solo mode
-    console.log('Solo mode: Getting movie suggestions')
-    const movies = await getMovieSuggestions(emotions, 'en', previousMovies, platforms)
+    // If emotions are provided directly (from client-side face detection)
+    if (emotions) {
+      if (analyzeOnly) {
+        console.log('Analyze only mode: returning emotions')
+        return NextResponse.json({
+          success: true,
+          emotions
+        })
+      }
 
-    return NextResponse.json({
-      success: true,
-      movies,
-      emotions
-    })
+      // Get movie suggestions for solo mode
+      console.log('Solo mode: Getting movie suggestions')
+      const movies = await getMovieSuggestions(emotions, 'en', previousMovies, platforms)
+
+      return NextResponse.json({
+        success: true,
+        movies,
+        emotions
+      })
+    }
+
+    throw new Error('Invalid request: missing emotions data')
 
   } catch (error) {
     console.error('API Error:', error)

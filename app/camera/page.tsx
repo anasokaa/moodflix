@@ -45,7 +45,7 @@ export default function CameraPage() {
     }
   }, [])
 
-  const handleImageCapture = useCallback(async (imageData: string) => {
+  const handleImageCapture = useCallback(async (imageData: string, emotions: EmotionData) => {
     try {
       setIsLoading(true)
       setError(null)
@@ -61,7 +61,7 @@ export default function CameraPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            image: imageData,
+            emotions,
             platforms
           })
         })
@@ -83,7 +83,7 @@ export default function CameraPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
-            image: imageData,
+            emotions,
             analyzeOnly: true
           })
         })
