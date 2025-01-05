@@ -4,13 +4,11 @@ import { useRef, useCallback, useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Camera as CameraIcon, Loader2 } from 'lucide-react'
-import * as faceapi from 'face-api.js'
 import { MoodRing } from './mood-ring'
-
-type EmotionKey = 'happy' | 'sad' | 'angry' | 'fearful' | 'disgusted' | 'surprised' | 'neutral'
+import { useFaceDetection, type EmotionData } from '@/lib/hooks/use-face-detection'
 
 interface CameraProps {
-  onCapture: (imageData: string, emotions: Record<EmotionKey, number>) => void
+  onCapture: (imageData: string, emotions: EmotionData) => void
   isLoading: boolean
 }
 
@@ -20,31 +18,22 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
   const streamRef = useRef<MediaStream | null>(null)
   const [isCameraReady, setIsCameraReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [currentEmotion, setCurrentEmotion] = useState<EmotionKey>('neutral')
-  const [emotionIntensity, setEmotionIntensity] = useState(0.5)
 
-  // Load face-api models
-  const loadModels = useCallback(async () => {
-    try {
-      await Promise.all([
-        faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
-        faceapi.nets.faceExpressionNet.loadFromUri('/models')
-      ])
-      return true
-    } catch (err) {
-      console.error('Error loading models:', err)
-      setError('Failed to load face detection models')
-      return false
-    }
-  }, [])
+  const {
+    currentEmotion,
+    emotionIntensity,
+    isModelReady,
+    detectEmotions
+  } = useFaceDetection({
+    videoElement: videoRef.current,
+    isEnabled: isCameraReady,
+    onError: setError
+  })
 
   // Initialize camera
   const initializeCamera = useCallback(async () => {
     try {
       if (!videoRef.current) return
-      
-      const modelsLoaded = await loadModels()
-      if (!modelsLoaded) return
 
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -63,39 +52,19 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
       setError('Unable to access camera')
       setIsCameraReady(false)
     }
-  }, [loadModels])
+  }, [])
 
   // Real-time emotion detection
   useEffect(() => {
     let animationFrame: number
 
-    const detectEmotions = async () => {
-      if (!videoRef.current || !isCameraReady) return
-
-      try {
-        const detection = await faceapi
-          .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
-          .withFaceExpressions()
-
-        if (detection) {
-          const emotions = detection.expressions
-          const entries = Object.entries(emotions) as [EmotionKey, number][]
-          const [dominantEmotion, intensity] = entries.reduce((a, b) => 
-            a[1] > b[1] ? a : b
-          )
-          
-          setCurrentEmotion(dominantEmotion)
-          setEmotionIntensity(intensity)
-        }
-      } catch (err) {
-        console.error('Error detecting emotions:', err)
-      }
-
-      animationFrame = requestAnimationFrame(detectEmotions)
+    const detectEmotionsLoop = async () => {
+      await detectEmotions()
+      animationFrame = requestAnimationFrame(detectEmotionsLoop)
     }
 
-    if (isCameraReady) {
-      detectEmotions()
+    if (isCameraReady && isModelReady) {
+      detectEmotionsLoop()
     }
 
     return () => {
@@ -103,7 +72,7 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
         cancelAnimationFrame(animationFrame)
       }
     }
-  }, [isCameraReady])
+  }, [isCameraReady, isModelReady, detectEmotions])
 
   // Cleanup function
   const cleanup = useCallback(() => {
@@ -140,28 +109,14 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
       // Draw video frame to canvas
       context.drawImage(video, 0, 0, canvas.width, canvas.height)
 
-      // Detect face and emotions
-      const detection = await faceapi
-        .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions())
-        .withFaceExpressions()
-
-      if (!detection) {
-        setError('No face detected. Please ensure your face is clearly visible.')
-        return
-      }
-
       // Get image data
       const imageData = canvas.toDataURL('image/jpeg')
 
-      // Map emotions to our expected format
-      const emotions: Record<EmotionKey, number> = {
-        happy: detection.expressions.happy,
-        sad: detection.expressions.sad,
-        angry: detection.expressions.angry,
-        fearful: detection.expressions.fearful,
-        disgusted: detection.expressions.disgusted,
-        surprised: detection.expressions.surprised,
-        neutral: detection.expressions.neutral
+      // Detect emotions
+      const emotions = await detectEmotions()
+      if (!emotions) {
+        setError('No face detected. Please ensure your face is clearly visible.')
+        return
       }
 
       // Call onCapture with image and emotions
@@ -170,7 +125,7 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
       console.error('Error capturing image:', err)
       setError('Failed to capture and analyze image')
     }
-  }, [onCapture, isLoading])
+  }, [onCapture, isLoading, detectEmotions])
 
   return (
     <Card className="overflow-hidden h-full relative">
@@ -196,7 +151,7 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
             </div>
           )}
           
-          {!isCameraReady && !error && (
+          {(!isCameraReady || !isModelReady) && !error && (
             <div className="absolute inset-0 flex items-center justify-center bg-background/80">
               <Loader2 className="w-8 h-8 animate-spin" />
             </div>
@@ -207,7 +162,7 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
           <Button
             size="lg"
             onClick={handleCapture}
-            disabled={!isCameraReady || isLoading}
+            disabled={!isCameraReady || !isModelReady || isLoading}
             className="w-full max-w-xs"
           >
             {isLoading ? (
