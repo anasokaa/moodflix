@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Card } from '@/components/ui/card'
@@ -33,9 +33,17 @@ export default function StreamingPlatformsPage() {
     if (selectedPlatforms.length > 0) {
       // Store selected platforms in sessionStorage
       sessionStorage.setItem('selectedPlatforms', JSON.stringify(selectedPlatforms))
-      router.push('/')
+      router.push('/camera')
     }
   }
+
+  useEffect(() => {
+    // Check if we have viewing mode
+    const viewingMode = sessionStorage.getItem('viewingMode')
+    if (!viewingMode) {
+      router.push('/')
+    }
+  }, [router])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-background to-primary/5 py-12">

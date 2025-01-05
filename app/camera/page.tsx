@@ -38,12 +38,32 @@ export default function CameraPage() {
     const viewingMode = sessionStorage.getItem('viewingMode')
     const numberOfPeople = sessionStorage.getItem('numberOfPeople')
     const currentPersonIndex = sessionStorage.getItem('currentPersonIndex')
+    const selectedPlatforms = sessionStorage.getItem('selectedPlatforms')
 
+    // If we don't have viewing mode or platforms selected, redirect to home
+    if (!viewingMode) {
+      router.push('/')
+      return
+    }
+
+    // If we don't have platforms selected, redirect to platforms page
+    if (!selectedPlatforms) {
+      router.push('/streaming-platforms')
+      return
+    }
+
+    // For group mode, check if we have number of people
+    if (viewingMode === 'group' && !numberOfPeople) {
+      router.push('/group-setup')
+      return
+    }
+
+    // Set up group mode state if applicable
     if (viewingMode === 'group' && numberOfPeople) {
       setTotalPeople(parseInt(numberOfPeople))
       setCurrentPerson(currentPersonIndex ? parseInt(currentPersonIndex) : 0)
     }
-  }, [])
+  }, [router])
 
   const handleImageCapture = useCallback(async (imageData: string, emotions: EmotionData) => {
     try {

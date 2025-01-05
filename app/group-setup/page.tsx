@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Button } from '@/components/ui/button'
@@ -12,6 +12,18 @@ export default function GroupSetupPage() {
   const [numberOfPeople, setNumberOfPeople] = useState(2)
   const router = useRouter()
   const { t } = useLanguage()
+
+  useEffect(() => {
+    // Check if we have viewing mode and it's group
+    const viewingMode = sessionStorage.getItem('viewingMode')
+    if (!viewingMode) {
+      router.push('/')
+      return
+    }
+    if (viewingMode !== 'group') {
+      router.push('/streaming-platforms')
+    }
+  }, [router])
 
   const handleContinue = () => {
     // Store the number of people in sessionStorage
