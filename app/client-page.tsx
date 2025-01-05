@@ -41,7 +41,7 @@ export default function ClientPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ imageData }),
+        body: JSON.stringify({ image: imageData }),
       })
 
       if (!response.ok) {
