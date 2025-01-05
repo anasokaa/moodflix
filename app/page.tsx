@@ -15,7 +15,7 @@ export default function HomePage() {
     if (!selectedPlatforms) {
       router.push('/streaming-platforms')
     } else {
-      router.push('/client-page')
+      router.push('/camera')
     }
   }, [router])
 
