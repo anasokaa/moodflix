@@ -16,10 +16,10 @@ export function LanguageSwitcher() {
       variant="ghost"
       size="icon"
       onClick={toggleLanguage}
-      className="rounded-full"
+      className="rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90"
       title={language === 'en' ? 'Switch to French' : 'Switch to English'}
     >
-      <Languages className="w-5 h-5" />
+      <Languages className="h-5 w-5" />
       <span className="sr-only">
         {language === 'en' ? 'Switch to French' : 'Switch to English'}
       </span>
