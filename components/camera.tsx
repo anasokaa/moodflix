@@ -30,6 +30,11 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
       setError(undefined)
       setIsActive(false)
 
+      if (!videoRef.current) {
+        console.error('Video element not found')
+        throw new Error('Video element not found')
+      }
+
       console.log('Requesting camera access...')
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
@@ -42,27 +47,22 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
       
       console.log('Camera access granted, setting up video stream...')
       streamRef.current = stream
+      videoRef.current.srcObject = stream
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream
+      // Wait for video metadata to load
+      await new Promise<void>((resolve) => {
+        if (!videoRef.current) return
         videoRef.current.onloadedmetadata = () => {
           console.log('Video metadata loaded')
-          if (videoRef.current) {
-            videoRef.current.play()
-              .then(() => {
-                console.log('Video playback started successfully')
-                setIsActive(true)
-              })
-              .catch((playError) => {
-                console.error('Error playing video:', playError)
-                throw playError
-              })
-          }
+          resolve()
         }
-      } else {
-        console.error('Video ref is null')
-        throw new Error('Video element not found')
-      }
+      })
+
+      // Start playing the video
+      console.log('Starting video playback...')
+      await videoRef.current.play()
+      console.log('Video playback started successfully')
+      setIsActive(true)
     } catch (err) {
       console.error('Error accessing camera:', err)
       if (err instanceof DOMException) {
@@ -142,17 +142,14 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
   return (
     <div className="w-full max-w-2xl mx-auto">
       <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-primary/10">
-        {isActive && (
-          <div className="absolute inset-0">
-            <video
-              ref={videoRef}
-              autoPlay
-              playsInline
-              muted
-              className="absolute inset-0 w-full h-full object-cover transform scale-x-[-1]"
-            />
-          </div>
-        )}
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="w-full h-full object-cover transform scale-x-[-1]"
+          style={{ display: isActive ? 'block' : 'none' }}
+        />
         
         {isActive && (
           <>
