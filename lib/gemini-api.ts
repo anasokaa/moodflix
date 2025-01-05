@@ -21,7 +21,7 @@ const PLATFORM_NAMES = {
 }
 
 export async function getMovieSuggestions(
-  emotions: EmotionData, 
+  emotions: EmotionData | EmotionData[], 
   language: string = 'en', 
   previousMovies: string[] = [],
   availablePlatforms: string[] = []
@@ -38,13 +38,53 @@ export async function getMovieSuggestions(
   const genAI = new GoogleGenerativeAI(apiKey)
   const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
 
-  // Find the dominant emotion and its intensity
-  const emotionEntry = Object.entries(emotions).reduce((a, b) => a[1] > b[1] ? a : b)
-  const dominantEmotion = emotionEntry[0]
-  const intensity = emotionEntry[1]
+  let prompt: string
 
-  // Create a more engaging and specific prompt
-  const prompt = `You are an empathetic movie expert. Based on someone experiencing "${dominantEmotion}" with ${(intensity * 100).toFixed(0)}% intensity, suggest ONE perfect movie.
+  if (Array.isArray(emotions)) {
+    // Group mode - combine emotions
+    const groupEmotions = emotions.map((emotion, index) => {
+      const dominantEmotion = Object.entries(emotion).reduce((a, b) => a[1] > b[1] ? a : b)
+      return `Person ${index + 1}: ${dominantEmotion[0]} (${(dominantEmotion[1] * 100).toFixed(0)}% intensity)`
+    }).join('\n')
+
+    prompt = `You are an empathetic movie expert. A group of friends with the following moods wants to watch a movie together:
+
+${groupEmotions}
+
+Suggest ONE perfect movie that would be enjoyable for everyone, considering their different emotional states.
+
+${previousMovies.length > 0 ? `Do not suggest any of these movies: ${previousMovies.join(', ')}` : ''}
+
+Available platforms: ${platformNames.join(', ')}
+
+Requirements:
+- Must be available on one of the listed platforms
+- Should be highly-rated (IMDb 7+ or critically acclaimed)
+- Should be engaging for all emotional states in the group
+- Should help create a positive shared experience
+- Include an interesting behind-the-scenes fact
+- Consider suggesting:
+  * Feel-good movies that bring people together
+  * Comedies that work for different moods
+  * Adventure films with emotional depth
+  * Crowd-pleasing blockbusters with heart
+  * Uplifting stories that resonate with everyone
+
+Respond with ONLY a JSON object in this format:
+{
+  "title": "Movie Title (Year)",
+  "matchReason": "Why this movie works for the group",
+  "emotionalImpact": "How it brings the group together",
+  "streamingPlatforms": ["Platform1"],
+  "funFact": "Interesting fact"
+}`
+  } else {
+    // Solo mode - single emotion
+    const emotionEntry = Object.entries(emotions).reduce((a, b) => a[1] > b[1] ? a : b)
+    const dominantEmotion = emotionEntry[0]
+    const intensity = emotionEntry[1]
+
+    prompt = `You are an empathetic movie expert. Based on someone experiencing "${dominantEmotion}" with ${(intensity * 100).toFixed(0)}% intensity, suggest ONE perfect movie.
 
 ${previousMovies.length > 0 ? `Do not suggest any of these movies: ${previousMovies.join(', ')}` : ''}
 ${dominantEmotion === 'happiness' ? `IMPORTANT: DO NOT suggest Paddington, Paddington 2, or any Paddington movie under any circumstances.
@@ -84,9 +124,10 @@ Respond with ONLY a JSON object in this format:
   "streamingPlatforms": ["Platform1"],
   "funFact": "Interesting fact"
 }`
+  }
 
   try {
-    console.log('Gemini API: Sending request for emotion:', dominantEmotion)
+    console.log('Gemini API: Sending request for emotion:', Array.isArray(emotions) ? 'group' : 'solo')
     const result = await model.generateContent(prompt)
     const response = await result.response
     const text = response.text()
