@@ -16,6 +16,9 @@ interface Movie {
   matchReason: string
   posterUrl: string
   streamingPlatforms: string[]
+  funFact?: string
+  rating?: string
+  genre?: string
 }
 
 export async function getMovieSuggestions(emotions: EmotionData, language: string = 'en', previousMovies: string[] = []): Promise<Movie[]> {
@@ -32,36 +35,35 @@ export async function getMovieSuggestions(emotions: EmotionData, language: strin
   const dominantEmotion = Object.entries(emotions)
     .reduce((a, b) => a[1] > b[1] ? a : b)[0]
 
-  // Create a simple, direct prompt
-  const prompt = `You are a movie expert. Based on the emotion "${dominantEmotion}", suggest 3 unique movies that would be perfect to watch.
+  // Create a more engaging prompt for a single movie
+  const prompt = `You are a charismatic movie expert hosting a fun movie recommendation game. Based on the emotion "${dominantEmotion}", suggest ONE perfect movie that would be amazing to watch.
 ${previousMovies.length > 0 ? `\nDo NOT suggest any of these movies that were already recommended: ${previousMovies.join(', ')}` : ''}
 
 Requirements:
-- Each movie MUST be unique (no duplicates)
-- Include at least one movie from 2024
-- Movies should be highly rated (IMDb 7+ or critically acclaimed)
-- Mix of mainstream hits and interesting lesser-known films
-- Each movie from a different genre
+- Must be a highly rated movie (IMDb 7+ or critically acclaimed)
+- Can be either a mainstream hit or an interesting lesser-known gem
 - Must be available on major streaming platforms
 - Must include a valid, working poster URL (use TMDB or official movie posters)
+- Include an interesting fun fact about the movie
+- Include the IMDb rating or Rotten Tomatoes score
+- Specify the primary genre
 
-For each movie, provide:
-- Title (include the year in parentheses)
-- A brief, engaging description (2-3 sentences)
-- Why it matches the emotion (1 sentence)
-- A valid, working poster URL (use TMDB format: https://image.tmdb.org/t/p/w500/[poster_path] or official movie poster URL)
-- List of streaming platforms where it's available (only include: Netflix, Disney+, Prime Video, Apple TV+, HBO Max, Shudder)
+Make it exciting! This is a game where we reveal the perfect movie for the viewer's mood.
 
-Format the response as a JSON array with this structure:
-[{
+Format the response as a JSON object with this structure:
+{
   "title": "Movie Title (Year)",
-  "description": "Movie description",
-  "matchReason": "Why it matches the emotion",
+  "description": "An engaging and descriptive summary (2-3 sentences)",
+  "matchReason": "An enthusiastic explanation of why this movie perfectly matches their emotion",
   "posterUrl": "https://image.tmdb.org/t/p/w500/[poster_path]",
-  "streamingPlatforms": ["Platform1", "Platform2"]
-}]
+  "streamingPlatforms": ["Platform1", "Platform2"],
+  "funFact": "An interesting or surprising fact about the movie",
+  "rating": "IMDb rating or Rotten Tomatoes score",
+  "genre": "Primary genre of the movie"
+}
 
-Note: Ensure all poster URLs are valid and working. Use TMDB format (https://image.tmdb.org/t/p/w500/[poster_path]) or official movie poster URLs.`
+Note: Only include these streaming platforms: Netflix, Disney+, Prime Video, Apple TV+, HBO Max, Shudder.
+Ensure the poster URL is valid and working using TMDB format (https://image.tmdb.org/t/p/w500/[poster_path]) or official movie poster URLs.`
 
   try {
     console.log('Gemini API: Sending request for emotion:', dominantEmotion)
@@ -75,34 +77,26 @@ Note: Ensure all poster URLs are valid and working. Use TMDB format (https://ima
       .replace(/```/, '')
       .trim()
 
-    const suggestions = JSON.parse(cleanedText)
+    const suggestion = JSON.parse(cleanedText)
     
-    if (!Array.isArray(suggestions) || suggestions.length === 0) {
-      throw new Error('Invalid response format')
-    }
-
-    // Validate each suggestion
-    const validSuggestions = suggestions.filter(movie => 
-      movie.title && 
-      movie.description && 
-      movie.matchReason && 
-      movie.posterUrl &&
-      movie.posterUrl.startsWith('http') &&
-      Array.isArray(movie.streamingPlatforms) &&
-      movie.streamingPlatforms.length > 0
-    )
-
-    if (validSuggestions.length === 0) {
-      throw new Error('No valid movie suggestions')
+    // Validate the suggestion
+    if (!suggestion.title || 
+        !suggestion.description || 
+        !suggestion.matchReason || 
+        !suggestion.posterUrl ||
+        !suggestion.posterUrl.startsWith('http') ||
+        !Array.isArray(suggestion.streamingPlatforms) ||
+        suggestion.streamingPlatforms.length === 0) {
+      throw new Error('Invalid movie suggestion format')
     }
 
     // Add fallback poster URL if needed
-    const moviesWithValidPosters = validSuggestions.map(movie => ({
-      ...movie,
-      posterUrl: movie.posterUrl || 'https://via.placeholder.com/300x450?text=No+Poster'
-    }))
+    const movieWithValidPoster = {
+      ...suggestion,
+      posterUrl: suggestion.posterUrl || 'https://via.placeholder.com/300x450?text=No+Poster'
+    }
 
-    return moviesWithValidPosters
+    return [movieWithValidPoster]
   } catch (error) {
     console.error('Gemini API error:', error)
     throw error

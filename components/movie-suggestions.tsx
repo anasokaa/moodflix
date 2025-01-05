@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { motion, AnimatePresence } from "framer-motion"
-import { Heart, Share2, ExternalLink } from 'lucide-react'
+import { Heart, Share2, ExternalLink, Star, Info } from 'lucide-react'
 
 interface EmotionData {
   anger: number
@@ -23,6 +23,9 @@ interface MovieSuggestionsProps {
     matchReason: string
     posterUrl: string
     streamingPlatforms: string[]
+    funFact?: string
+    rating?: string
+    genre?: string
   }>
   emotions?: EmotionData
   error?: string
@@ -34,7 +37,8 @@ const platformEmojis: Record<string, string> = {
   'Disney+': '👸',
   'Prime Video': '📦',
   'Apple TV+': '🍎',
-  'HBO Max': '🎭'
+  'HBO Max': '🎭',
+  'Shudder': '👻'
 }
 
 const platformUrls: Record<string, string> = {
@@ -42,26 +46,14 @@ const platformUrls: Record<string, string> = {
   'Disney+': 'https://www.disneyplus.com/search?q=',
   'Prime Video': 'https://www.amazon.com/s?k=',
   'Apple TV+': 'https://tv.apple.com/search?term=',
-  'HBO Max': 'https://play.hbomax.com/search?q='
-}
-
-const container = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.1
-    }
-  }
-}
-
-const item = {
-  hidden: { y: 20, opacity: 0 },
-  show: { y: 0, opacity: 1 }
+  'HBO Max': 'https://play.hbomax.com/search?q=',
+  'Shudder': 'https://www.shudder.com/search/'
 }
 
 export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: MovieSuggestionsProps) {
+  const [isRevealed, setIsRevealed] = useState(false)
   const [favorites, setFavorites] = useState<string[]>([])
+  const movie = movies[0] // We now only show one movie
 
   const toggleFavorite = (title: string) => {
     setFavorites(prev => 
@@ -103,91 +95,165 @@ export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: Mo
   }
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4">
-      <motion.div
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-      >
-        <AnimatePresence mode="popLayout">
-          {movies.map((movie) => (
-            <motion.div 
-              key={movie.title} 
-              variants={item}
-              layout
-              layoutId={movie.title}
-            >
-              <Card className="h-full group hover:shadow-lg transition-all duration-300 bg-card/50 backdrop-blur-sm border border-primary/10">
-                <CardHeader className="space-y-2">
-                  <div className="flex justify-between items-start">
-                    <CardTitle className="text-xl font-bold text-primary">
+    <div className="w-full max-w-2xl mx-auto px-4">
+      {!isRevealed && (
+        <motion.button
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsRevealed(true)}
+          className="w-full p-8 rounded-2xl bg-primary text-primary-foreground font-bold text-xl shadow-lg hover:shadow-xl transition-all duration-300"
+        >
+          🎬 Reveal Your Perfect Movie! ✨
+        </motion.button>
+      )}
+
+      <AnimatePresence mode="wait">
+        {isRevealed && movie && (
+          <motion.div
+            key="movie-card"
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -50 }}
+            transition={{ type: "spring", duration: 0.8 }}
+          >
+            <Card className="overflow-hidden bg-card/50 backdrop-blur-sm border border-primary/10">
+              <div className="relative aspect-[2/3] w-full">
+                <motion.img
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  src={movie.posterUrl}
+                  alt={movie.title}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+
+              <CardHeader className="space-y-2">
+                <div className="flex justify-between items-start">
+                  <div className="space-y-1">
+                    <CardTitle className="text-2xl font-bold text-primary">
                       {movie.title}
                     </CardTitle>
-                    <div className="flex gap-2">
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => toggleFavorite(movie.title)}
-                        className={`p-2 rounded-full ${
-                          favorites.includes(movie.title)
-                            ? 'text-red-500 bg-red-500/10'
-                            : 'text-muted-foreground hover:text-primary'
-                        }`}
-                      >
-                        <Heart className="w-4 h-4" />
-                      </motion.button>
-                      <motion.button
-                        whileHover={{ scale: 1.1 }}
-                        whileTap={{ scale: 0.9 }}
-                        onClick={() => shareMovie(movie)}
-                        className="p-2 rounded-full text-muted-foreground hover:text-primary"
-                      >
-                        <Share2 className="w-4 h-4" />
-                      </motion.button>
-                    </div>
+                    {movie.genre && (
+                      <Badge variant="secondary" className="text-xs">
+                        {movie.genre}
+                      </Badge>
+                    )}
                   </div>
-                  <CardDescription className="text-sm line-clamp-2">
+                  <div className="flex gap-2">
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => toggleFavorite(movie.title)}
+                      className={`p-2 rounded-full ${
+                        favorites.includes(movie.title)
+                          ? 'text-red-500 bg-red-500/10'
+                          : 'text-muted-foreground hover:text-primary'
+                      }`}
+                    >
+                      <Heart className="w-5 h-5" />
+                    </motion.button>
+                    <motion.button
+                      whileHover={{ scale: 1.1 }}
+                      whileTap={{ scale: 0.9 }}
+                      onClick={() => shareMovie(movie)}
+                      className="p-2 rounded-full text-muted-foreground hover:text-primary"
+                    >
+                      <Share2 className="w-5 h-5" />
+                    </motion.button>
+                  </div>
+                </div>
+
+                <CardDescription className="text-base space-y-4">
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                  >
                     {movie.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-sm italic text-muted-foreground">
+                  </motion.p>
+
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    className="italic text-primary/80"
+                  >
                     {movie.matchReason}
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {movie.streamingPlatforms.map((platform) => (
-                      <motion.div
-                        key={platform}
-                        whileHover={{ scale: 1.05 }}
-                        whileTap={{ scale: 0.95 }}
+                  </motion.p>
+
+                  {movie.rating && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.6 }}
+                      className="flex items-center gap-2 text-yellow-500"
+                    >
+                      <Star className="w-4 h-4" />
+                      <span>{movie.rating}</span>
+                    </motion.div>
+                  )}
+
+                  {movie.funFact && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.7 }}
+                      className="flex items-start gap-2 text-sm bg-primary/5 p-3 rounded-lg"
+                    >
+                      <Info className="w-4 h-4 mt-1 text-primary" />
+                      <p>{movie.funFact}</p>
+                    </motion.div>
+                  )}
+                </CardDescription>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.8 }}
+                  className="flex flex-wrap gap-2"
+                >
+                  {movie.streamingPlatforms.map((platform) => (
+                    <motion.div
+                      key={platform}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                    >
+                      <Badge
+                        variant="secondary"
+                        className="text-sm cursor-pointer hover:bg-primary/20 transition-colors flex items-center gap-1"
+                        onClick={() => openStreamingService(platform, movie.title)}
                       >
-                        <Badge
-                          variant="secondary"
-                          className="text-xs cursor-pointer hover:bg-primary/20 transition-colors flex items-center gap-1"
-                          onClick={() => openStreamingService(platform, movie.title)}
-                        >
-                          {platformEmojis[platform] || '🎥'} {platform}
-                          <ExternalLink className="w-3 h-3 ml-1" />
-                        </Badge>
-                      </motion.div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </AnimatePresence>
-      </motion.div>
-      
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
-        onClick={onGenerateMore}
-        className="mt-12 mx-auto block px-8 py-3 rounded-full bg-primary text-primary-foreground font-medium shadow-lg hover:shadow-xl transition-all duration-300"
-      >
-        ✨ More Movies! 🍿
-      </motion.button>
+                        {platformEmojis[platform] || '🎥'} {platform}
+                        <ExternalLink className="w-3 h-3 ml-1" />
+                      </Badge>
+                    </motion.div>
+                  ))}
+                </motion.div>
+              </CardContent>
+            </Card>
+
+            <motion.button
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                setIsRevealed(false)
+                onGenerateMore()
+              }}
+              className="mt-8 w-full px-8 py-4 rounded-full bg-primary/10 text-primary font-medium hover:bg-primary/20 transition-all duration-300"
+            >
+              Try Another Movie! 🎲
+            </motion.button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   )
 } 
