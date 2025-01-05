@@ -21,32 +21,41 @@ export async function getMovieSuggestions(emotions: EmotionData, language: strin
   const genAI = new GoogleGenerativeAI(apiKey)
   const model = genAI.getGenerativeModel({ model: 'gemini-pro' })
 
-  // Find the dominant emotion
-  const dominantEmotion = Object.entries(emotions)
-    .reduce((a, b) => a[1] > b[1] ? a : b)[0]
+  // Find the dominant emotion and its intensity
+  const emotionEntry = Object.entries(emotions).reduce((a, b) => a[1] > b[1] ? a : b)
+  const dominantEmotion = emotionEntry[0]
+  const intensity = emotionEntry[1]
 
-  // Create a more engaging prompt for a single movie
-  const prompt = `You are a charismatic movie expert hosting a fun movie recommendation game. Based on the emotion "${dominantEmotion}", suggest ONE perfect movie that would be amazing to watch.
-${previousMovies.length > 0 ? `\nDo NOT suggest any of these movies that were already recommended: ${previousMovies.join(', ')}` : ''}
+  // Create a more engaging and specific prompt
+  const prompt = `You are an empathetic movie expert with deep knowledge of cinema's emotional impact. Looking at someone experiencing "${dominantEmotion}" with an intensity of ${(intensity * 100).toFixed(0)}%, suggest ONE perfect movie that would genuinely resonate with and enhance their emotional state.
+
+${previousMovies.length > 0 ? `\nTo keep suggestions fresh and exciting, please DO NOT recommend any of these previously suggested movies: ${previousMovies.join(', ')}` : ''}
+
+Consider these aspects when choosing the movie:
+1. How the movie's themes and emotional journey align with ${dominantEmotion}
+2. What specific scenes or elements would be particularly impactful
+3. Why this movie would be especially meaningful in their current emotional state
+4. How the movie could help process or complement their feelings
 
 Requirements:
-- Must be a highly rated movie (IMDb 7+ or critically acclaimed)
-- Can be either a mainstream hit or an interesting lesser-known gem
+- Choose a highly-rated movie (IMDb 7+ or critically acclaimed)
+- Can be any genre that fits emotionally (mainstream hits or hidden gems)
 - Must be available on major streaming platforms
-- Include an interesting fun fact about the movie
-- Include the primary genre
+- Should have a compelling emotional arc that resonates with their mood
+- Include a fascinating behind-the-scenes fact that adds depth to the viewing experience
 
-Make it exciting! This is a game where we reveal the perfect movie for the viewer's mood.
-
-Format the response as a JSON object with this structure:
+Format your response as a JSON object:
 {
   "title": "Movie Title (Year)",
-  "matchReason": "An enthusiastic explanation of why this movie perfectly matches their emotion",
+  "matchReason": "A thoughtful, specific explanation of why this movie is perfect for their emotional state, mentioning key scenes or themes that will resonate (2-3 sentences)",
+  "emotionalImpact": "Describe how this movie could positively influence or complement their current mood (1-2 sentences)",
   "streamingPlatforms": ["Platform1", "Platform2"],
-  "funFact": "An interesting or surprising fact about the movie"
+  "funFact": "An interesting production fact or trivia that adds meaning to the viewing experience"
 }
 
-Note: Only include these streaming platforms: Netflix, Disney+, Prime Video, Apple TV+, HBO Max, Shudder.`
+Available streaming platforms: Netflix, Disney+, Prime Video, Apple TV+, HBO Max, Shudder.
+
+Remember: This is more than just a movie suggestion - it's an opportunity to provide emotional support and understanding through the power of cinema.`
 
   try {
     console.log('Gemini API: Sending request for emotion:', dominantEmotion)
@@ -65,6 +74,7 @@ Note: Only include these streaming platforms: Netflix, Disney+, Prime Video, App
     // Validate the suggestion
     if (!suggestion.title || 
         !suggestion.matchReason || 
+        !suggestion.emotionalImpact ||
         !Array.isArray(suggestion.streamingPlatforms) ||
         suggestion.streamingPlatforms.length === 0) {
       throw new Error('Invalid movie suggestion format')
@@ -79,7 +89,7 @@ Note: Only include these streaming platforms: Netflix, Disney+, Prime Video, App
     // Combine Gemini and OMDB data
     const completeMovie = {
       ...movieDetails,
-      matchReason: suggestion.matchReason,
+      matchReason: `${suggestion.matchReason} ${suggestion.emotionalImpact}`,
       streamingPlatforms: suggestion.streamingPlatforms,
       funFact: suggestion.funFact
     }
