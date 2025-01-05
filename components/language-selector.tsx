@@ -1,51 +1,33 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { Languages } from 'lucide-react'
 import { useLanguage } from '@/lib/language-context'
+import { Languages } from 'lucide-react'
 
-const languageNames = {
+type Language = 'en' | 'fr'
+
+const languageNames: Record<Language, string> = {
   en: 'English 🇬🇧',
   fr: 'Français 🇫🇷'
 }
 
-type Language = keyof typeof languageNames
-
 export function LanguageSelector() {
-  const { t, currentLanguage, setLanguage } = useLanguage()
+  const { t, language, setLanguage } = useLanguage()
 
   const languages: Language[] = ['en', 'fr']
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
+    <div className="flex gap-2">
+      {languages.map((lang) => (
         <Button
-          variant="ghost"
-          size="icon"
-          className="rounded-full bg-background/80 backdrop-blur-sm hover:bg-background/90"
+          key={lang}
+          variant={language === lang ? 'default' : 'outline'}
+          onClick={() => setLanguage(lang)}
+          className="rounded-full"
         >
-          <Languages className="h-5 w-5" />
+          {languageNames[lang]}
         </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end">
-        {languages.map((lang) => (
-          <DropdownMenuItem
-            key={lang}
-            onClick={() => setLanguage(lang)}
-            className={`cursor-pointer ${
-              currentLanguage === lang ? 'bg-primary/10 text-primary' : ''
-            }`}
-          >
-            {languageNames[lang]}
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+      ))}
+    </div>
   )
 } 
