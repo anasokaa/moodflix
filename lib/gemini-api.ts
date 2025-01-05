@@ -1,5 +1,4 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
-import { getMovieDetails } from './omdb-api'
 
 interface EmotionData {
   anger: number
@@ -44,11 +43,13 @@ Requirements:
 - Mix of mainstream hits and interesting lesser-known films
 - Each movie from a different genre
 - Must be available on major streaming platforms
+- Must include a valid, working poster URL (use TMDB or official movie posters)
 
 For each movie, provide:
 - Title (include the year in parentheses)
 - A brief, engaging description (2-3 sentences)
 - Why it matches the emotion (1 sentence)
+- A valid, working poster URL (use TMDB format: https://image.tmdb.org/t/p/w500/[poster_path] or official movie poster URL)
 - List of streaming platforms where it's available (only include: Netflix, Disney+, Prime Video, Apple TV+, HBO Max, Shudder)
 
 Format the response as a JSON array with this structure:
@@ -56,8 +57,11 @@ Format the response as a JSON array with this structure:
   "title": "Movie Title (Year)",
   "description": "Movie description",
   "matchReason": "Why it matches the emotion",
+  "posterUrl": "https://image.tmdb.org/t/p/w500/[poster_path]",
   "streamingPlatforms": ["Platform1", "Platform2"]
-}]`
+}]
+
+Note: Ensure all poster URLs are valid and working. Use TMDB format (https://image.tmdb.org/t/p/w500/[poster_path]) or official movie poster URLs.`
 
   try {
     console.log('Gemini API: Sending request for emotion:', dominantEmotion)
@@ -82,6 +86,8 @@ Format the response as a JSON array with this structure:
       movie.title && 
       movie.description && 
       movie.matchReason && 
+      movie.posterUrl &&
+      movie.posterUrl.startsWith('http') &&
       Array.isArray(movie.streamingPlatforms) &&
       movie.streamingPlatforms.length > 0
     )
@@ -90,40 +96,13 @@ Format the response as a JSON array with this structure:
       throw new Error('No valid movie suggestions')
     }
 
-    // Get movie details from OMDB API for posters
-    console.log('Gemini API: Fetching movie posters...')
-    const moviesWithPosters = await Promise.all(
-      validSuggestions.map(async (movie) => {
-        try {
-          // Extract the movie title without the year
-          const titleWithoutYear = movie.title.replace(/\s*\([^)]*\)$/, '')
-          console.log('Fetching poster for movie:', titleWithoutYear)
-          const details = await getMovieDetails(titleWithoutYear)
-          
-          if (!details) {
-            console.log('No details found for movie:', titleWithoutYear)
-            return {
-              ...movie,
-              posterUrl: 'https://via.placeholder.com/300x450?text=No+Poster'
-            }
-          }
+    // Add fallback poster URL if needed
+    const moviesWithValidPosters = validSuggestions.map(movie => ({
+      ...movie,
+      posterUrl: movie.posterUrl || 'https://via.placeholder.com/300x450?text=No+Poster'
+    }))
 
-          console.log('Got poster URL:', details.posterUrl)
-          return {
-            ...movie,
-            posterUrl: details.posterUrl
-          }
-        } catch (error) {
-          console.error(`Error getting poster for ${movie.title}:`, error)
-          return {
-            ...movie,
-            posterUrl: 'https://via.placeholder.com/300x450?text=No+Poster'
-          }
-        }
-      })
-    )
-
-    return moviesWithPosters
+    return moviesWithValidPosters
   } catch (error) {
     console.error('Gemini API error:', error)
     throw error
