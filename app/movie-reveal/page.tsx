@@ -59,8 +59,10 @@ export default function MovieRevealPage() {
   const router = useRouter()
   const { t } = useLanguage()
 
+  // Load initial data
   useEffect(() => {
-    // Only access sessionStorage on the client side
+    if (typeof window === 'undefined') return
+
     const storedMovieData = sessionStorage.getItem('movieData')
     const storedEmotions = sessionStorage.getItem('emotions')
     
@@ -69,11 +71,16 @@ export default function MovieRevealPage() {
       return
     }
 
-    setMovieData(JSON.parse(storedMovieData))
+    try {
+      setMovieData(JSON.parse(storedMovieData))
+    } catch (err) {
+      console.error('Error parsing movie data:', err)
+      router.push('/')
+    }
   }, [router])
 
   const handleGenerateMore = useCallback(async () => {
-    if (isLoading) return
+    if (isLoading || typeof window === 'undefined') return
     
     try {
       setIsLoading(true)
