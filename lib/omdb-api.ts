@@ -124,7 +124,7 @@ export async function getMovieSuggestions(emotions: EmotionData): Promise<Movie[
   }
 }
 
-export async function getMovieDetails(title: string) {
+export async function getMovieDetails(title: string): Promise<Movie | null> {
   const apiKey = process.env.OMDB_API_KEY
   if (!apiKey) {
     console.error('OMDB API: API key not configured')
@@ -146,7 +146,11 @@ export async function getMovieDetails(title: string) {
     }
 
     return {
-      posterUrl: data.Poster !== 'N/A' ? data.Poster : '/movie-placeholder.jpg'
+      title: data.Title || title,
+      description: '',
+      matchReason: '',
+      posterUrl: data.Poster !== 'N/A' ? data.Poster : '/movie-placeholder.jpg',
+      streamingPlatforms: []
     }
   } catch (error) {
     console.error('OMDB API error:', error)
