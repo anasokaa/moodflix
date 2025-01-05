@@ -120,45 +120,47 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
   }, [onCapture, isLoading])
 
   return (
-    <Card className="overflow-hidden">
-      <div className="relative aspect-video bg-muted">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="w-full h-full object-cover"
-          onLoadedMetadata={() => setIsCameraReady(true)}
-        />
-        <canvas ref={canvasRef} className="hidden" />
-        
-        {error && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/80">
-            <p className="text-destructive text-center p-4">{error}</p>
-          </div>
-        )}
-        
-        {!isCameraReady && !error && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/80">
-            <Loader2 className="w-8 h-8 animate-spin" />
-          </div>
-        )}
-      </div>
-
-      <div className="p-4 flex justify-center">
-        <Button
-          size="lg"
-          onClick={handleCapture}
-          disabled={!isCameraReady || isLoading}
-          className="w-full max-w-xs"
-        >
-          {isLoading ? (
-            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-          ) : (
-            <CameraIcon className="w-4 h-4 mr-2" />
+    <Card className="overflow-hidden h-full">
+      <div className="relative h-full flex flex-col">
+        <div className="flex-1 relative bg-muted">
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            muted
+            className="absolute inset-0 w-full h-full object-cover"
+            onLoadedMetadata={() => setIsCameraReady(true)}
+          />
+          <canvas ref={canvasRef} className="hidden" />
+          
+          {error && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+              <p className="text-destructive text-center p-4">{error}</p>
+            </div>
           )}
-          Take a Selfie
-        </Button>
+          
+          {!isCameraReady && !error && (
+            <div className="absolute inset-0 flex items-center justify-center bg-background/80">
+              <Loader2 className="w-8 h-8 animate-spin" />
+            </div>
+          )}
+        </div>
+
+        <div className="p-3 flex justify-center">
+          <Button
+            size="lg"
+            onClick={handleCapture}
+            disabled={!isCameraReady || isLoading}
+            className="w-full max-w-xs"
+          >
+            {isLoading ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <CameraIcon className="w-4 h-4 mr-2" />
+            )}
+            Take a Selfie
+          </Button>
+        </div>
       </div>
     </Card>
   )

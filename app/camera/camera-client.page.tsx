@@ -202,14 +202,14 @@ export default function CameraClient() {
   }, [router, t, currentPerson, totalPeople, isLoading])
 
   return (
-    <>
+    <div className="h-screen flex flex-col p-4 bg-gradient-to-b from-black via-background to-primary/5">
       <AnimatePresence mode="wait">
         <TransitionAnimation isTransitioning={isTransitioning} />
       </AnimatePresence>
 
-      <div className="min-h-screen p-6 space-y-12">
+      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full gap-4">
         <motion.h1
-          className="text-4xl md:text-5xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600"
+          className="text-3xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.3 }}
@@ -218,7 +218,7 @@ export default function CameraClient() {
         </motion.h1>
 
         {totalPeople > 1 && (
-          <div className="text-center space-y-2">
+          <div className="text-center">
             <div className="flex items-center justify-center gap-2">
               <Users className="w-5 h-5" />
               <span className="text-lg font-medium">
@@ -231,15 +231,18 @@ export default function CameraClient() {
           </div>
         )}
 
-        <div className="max-w-6xl mx-auto space-y-12">
-          <Camera onCapture={handleImageCapture} isLoading={isLoading} />
-          {error && (
-            <div className="text-center text-destructive">
-              {error}
-            </div>
-          )}
+        <div className="flex-1 flex items-center">
+          <div className="w-full max-h-[70vh]">
+            <Camera onCapture={handleImageCapture} isLoading={isLoading} />
+          </div>
         </div>
+
+        {error && (
+          <div className="text-center text-destructive">
+            {error}
+          </div>
+        )}
       </div>
-    </>
+    </div>
   )
 } 
