@@ -1,8 +1,7 @@
 import type { Metadata } from 'next'
 import { Inter } from 'next/font/google'
 import './globals.css'
-import { LanguageProvider } from '@/lib/language-context'
-import { SiteHeader } from '@/components/site-header'
+import { LanguageProvider } from '@/components/providers/language-provider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,7 +20,6 @@ export default function RootLayout({
       <body className={inter.className}>
         <LanguageProvider>
           <div className="min-h-screen bg-gradient-to-b from-black via-background to-primary/5">
-            <SiteHeader />
             {children}
           </div>
         </LanguageProvider>
