@@ -47,14 +47,34 @@ export async function getMovieSuggestions(
   const prompt = `You are an empathetic movie expert. Based on someone experiencing "${dominantEmotion}" with ${(intensity * 100).toFixed(0)}% intensity, suggest ONE perfect movie.
 
 ${previousMovies.length > 0 ? `Do not suggest any of these movies: ${previousMovies.join(', ')}` : ''}
+${dominantEmotion === 'happiness' ? `IMPORTANT: DO NOT suggest Paddington, Paddington 2, or any Paddington movie under any circumstances.
+
+For happy emotions, suggest one of these types of movies instead:
+1. Modern comedies (2015+) that bring fresh humor and joy
+2. Uplifting dramas about personal achievement or following dreams
+3. Innovative animated films with unique storytelling
+4. Contemporary musicals that celebrate life
+5. Inspiring biographical films about remarkable achievements
+6. Feel-good adventure movies with humor and heart
+7. Heartwarming family films (but NOT Paddington)
+8. Creative documentaries that showcase human triumph
+
+Some specific examples to consider:
+- "Soul" (2020) - for its joyful exploration of life's purpose
+- "The Greatest Showman" (2017) - for its celebratory spirit
+- "Marcel the Shell with Shoes On" (2022) - for its charming optimism
+- "CODA" (2021) - for its heartwarming family story
+- "Everything Everywhere All at Once" (2022) - for its joyful chaos` : ''}
 
 Available platforms: ${platformNames.join(', ')}
 
 Requirements:
 - Must be available on one of the listed platforms
 - Should be highly-rated (IMDb 7+ or critically acclaimed)
-- Should match the emotional state
+- Should match the emotional state but be CREATIVE and VARIED in your suggestions
 - Include an interesting behind-the-scenes fact
+- DO NOT suggest obvious or common choices
+- For happy emotions, absolutely NO Paddington movies
 
 Respond with ONLY a JSON object in this format:
 {
