@@ -7,12 +7,12 @@ import { Camera as CameraIcon, Loader2 } from 'lucide-react'
 import * as faceapi from 'face-api.js'
 import { MoodRing } from './mood-ring'
 
+type EmotionKey = 'happy' | 'sad' | 'angry' | 'fearful' | 'disgusted' | 'surprised' | 'neutral'
+
 interface CameraProps {
-  onCapture: (imageData: string, emotions: faceapi.FaceExpressions) => void
+  onCapture: (imageData: string, emotions: Record<EmotionKey, number>) => void
   isLoading: boolean
 }
-
-type EmotionKey = 'neutral' | 'happy' | 'sad' | 'angry' | 'fearful' | 'disgusted' | 'surprised'
 
 export function Camera({ onCapture, isLoading }: CameraProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -153,8 +153,19 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
       // Get image data
       const imageData = canvas.toDataURL('image/jpeg')
 
+      // Map emotions to our expected format
+      const emotions: Record<EmotionKey, number> = {
+        happy: detection.expressions.happy,
+        sad: detection.expressions.sad,
+        angry: detection.expressions.angry,
+        fearful: detection.expressions.fearful,
+        disgusted: detection.expressions.disgusted,
+        surprised: detection.expressions.surprised,
+        neutral: detection.expressions.neutral
+      }
+
       // Call onCapture with image and emotions
-      onCapture(imageData, detection.expressions)
+      onCapture(imageData, emotions)
     } catch (err) {
       console.error('Error capturing image:', err)
       setError('Failed to capture and analyze image')
