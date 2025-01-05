@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from '@google/generative-ai'
+import { getMovieDetails, Movie } from './omdb-api'
 
 interface EmotionData {
   anger: number
@@ -8,17 +9,6 @@ interface EmotionData {
   neutral: number
   sadness: number
   surprise: number
-}
-
-interface Movie {
-  title: string
-  description: string
-  matchReason: string
-  posterUrl: string
-  streamingPlatforms: string[]
-  funFact?: string
-  rating?: string
-  genre?: string
 }
 
 export async function getMovieSuggestions(emotions: EmotionData, language: string = 'en', previousMovies: string[] = []): Promise<Movie[]> {
@@ -43,27 +33,20 @@ Requirements:
 - Must be a highly rated movie (IMDb 7+ or critically acclaimed)
 - Can be either a mainstream hit or an interesting lesser-known gem
 - Must be available on major streaming platforms
-- Must include a valid, working poster URL (use TMDB or official movie posters)
 - Include an interesting fun fact about the movie
-- Include the IMDb rating or Rotten Tomatoes score
-- Specify the primary genre
+- Include the primary genre
 
 Make it exciting! This is a game where we reveal the perfect movie for the viewer's mood.
 
 Format the response as a JSON object with this structure:
 {
   "title": "Movie Title (Year)",
-  "description": "An engaging and descriptive summary (2-3 sentences)",
   "matchReason": "An enthusiastic explanation of why this movie perfectly matches their emotion",
-  "posterUrl": "https://image.tmdb.org/t/p/w500/[poster_path]",
   "streamingPlatforms": ["Platform1", "Platform2"],
-  "funFact": "An interesting or surprising fact about the movie",
-  "rating": "IMDb rating or Rotten Tomatoes score",
-  "genre": "Primary genre of the movie"
+  "funFact": "An interesting or surprising fact about the movie"
 }
 
-Note: Only include these streaming platforms: Netflix, Disney+, Prime Video, Apple TV+, HBO Max, Shudder.
-Ensure the poster URL is valid and working using TMDB format (https://image.tmdb.org/t/p/w500/[poster_path]) or official movie poster URLs.`
+Note: Only include these streaming platforms: Netflix, Disney+, Prime Video, Apple TV+, HBO Max, Shudder.`
 
   try {
     console.log('Gemini API: Sending request for emotion:', dominantEmotion)
@@ -81,22 +64,27 @@ Ensure the poster URL is valid and working using TMDB format (https://image.tmdb
     
     // Validate the suggestion
     if (!suggestion.title || 
-        !suggestion.description || 
         !suggestion.matchReason || 
-        !suggestion.posterUrl ||
-        !suggestion.posterUrl.startsWith('http') ||
         !Array.isArray(suggestion.streamingPlatforms) ||
         suggestion.streamingPlatforms.length === 0) {
       throw new Error('Invalid movie suggestion format')
     }
 
-    // Add fallback poster URL if needed
-    const movieWithValidPoster = {
-      ...suggestion,
-      posterUrl: suggestion.posterUrl || 'https://via.placeholder.com/300x450?text=No+Poster'
+    // Get movie details from OMDB
+    const movieDetails = await getMovieDetails(suggestion.title)
+    if (!movieDetails) {
+      throw new Error('Could not fetch movie details')
     }
 
-    return [movieWithValidPoster]
+    // Combine Gemini and OMDB data
+    const completeMovie = {
+      ...movieDetails,
+      matchReason: suggestion.matchReason,
+      streamingPlatforms: suggestion.streamingPlatforms,
+      funFact: suggestion.funFact
+    }
+
+    return [completeMovie]
   } catch (error) {
     console.error('Gemini API error:', error)
     throw error

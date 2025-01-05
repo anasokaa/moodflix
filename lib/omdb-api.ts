@@ -4,6 +4,9 @@ export interface Movie {
   matchReason: string
   posterUrl: string
   streamingPlatforms: string[]
+  funFact?: string
+  rating?: string
+  genre?: string
 }
 
 interface OMDBResponse {
@@ -11,6 +14,8 @@ interface OMDBResponse {
   Year: string
   Plot: string
   Poster: string
+  imdbRating: string
+  Genre: string
   Response: string
   Error?: string
 }
@@ -133,37 +138,33 @@ export async function getMovieDetails(title: string): Promise<Movie | null> {
 
   try {
     console.log('OMDB API: Fetching details for movie:', title)
+    const cleanTitle = title.includes('(') ? title.split('(')[0].trim() : title
+    
     const response = await fetch(
-      `https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${apiKey}`
+      `https://www.omdbapi.com/?t=${encodeURIComponent(cleanTitle)}&apikey=${apiKey}`
     )
+    const data: OMDBResponse = await response.json()
 
-    if (!response.ok) {
-      console.error('OMDB API: Response not OK:', response.status)
-      throw new Error(`OMDB API error: ${response.status}`)
+    if (data.Response === 'False' || !data.Poster || data.Poster === 'N/A') {
+      console.log('OMDB API: No data found for movie:', title)
+      return null
     }
 
-    const data = await response.json()
-    console.log('OMDB API: Response data:', data)
-
-    if (data.Error) {
-      console.error('OMDB API: Error in response:', data.Error)
-      throw new Error(`OMDB API error: ${data.Error}`)
-    }
-
-    // Ensure we have a valid poster URL
-    const posterUrl = data.Poster && data.Poster !== 'N/A' 
-      ? data.Poster 
-      : `https://image.tmdb.org/t/p/w500${data.Poster}` // Try TMDB format
-        || 'https://via.placeholder.com/300x450?text=No+Poster' // Fallback to placeholder
-
-    console.log('OMDB API: Using poster URL:', posterUrl)
+    console.log('OMDB API: Found movie data:', {
+      title: data.Title,
+      year: data.Year,
+      rating: data.imdbRating,
+      poster: data.Poster
+    })
 
     return {
-      title: data.Title || title,
-      description: data.Plot || '',
-      matchReason: '',
-      posterUrl,
-      streamingPlatforms: []
+      title: `${data.Title} (${data.Year})`,
+      description: data.Plot,
+      matchReason: "", // This will be filled by Gemini
+      posterUrl: data.Poster,
+      streamingPlatforms: [], // This will be filled by Gemini
+      rating: `IMDb: ${data.imdbRating}/10`,
+      genre: data.Genre.split(',')[0].trim()
     }
   } catch (error) {
     console.error('OMDB API error:', error)
