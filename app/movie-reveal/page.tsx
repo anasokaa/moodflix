@@ -34,6 +34,17 @@ interface StoredData {
   success?: boolean
 }
 
+// Map emotion keys to their display names
+const emotionDisplayNames: Record<string, string> = {
+  anger: 'angry',
+  disgust: 'disgusted',
+  fear: 'fearful',
+  happiness: 'happy',
+  neutral: 'neutral',
+  sadness: 'sad',
+  surprise: 'surprised'
+}
+
 export default function MovieRevealPage() {
   const router = useRouter()
   const { t } = useLanguage()
@@ -91,10 +102,13 @@ export default function MovieRevealPage() {
   const storedData = typeof window !== 'undefined' ? sessionStorage.getItem('movieData') : null
   const data: StoredData = storedData ? JSON.parse(storedData) : { movies: [], emotions: {} as EmotionData }
 
-  // Get the dominant emotion
+  // Get the dominant emotion and convert it to its display name
   const dominantEmotion = data.emotions && Object.keys(data.emotions).length > 0 ? 
-    Object.entries(data.emotions).reduce((a, b) => a[1] > b[1] ? a : b, ['neutral', 0])[0] 
+    Object.entries(data.emotions)
+      .reduce((a, b) => a[1] > b[1] ? a : b, ['neutral', 0])[0] 
     : 'neutral'
+  
+  const displayEmotion = emotionDisplayNames[dominantEmotion] || dominantEmotion
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-background to-primary/5 py-12">
@@ -111,7 +125,7 @@ export default function MovieRevealPage() {
           transition={{ delay: 0.5 }}
           className="max-w-md mx-auto"
         >
-          <EmotionDisplay emotion={dominantEmotion} />
+          <EmotionDisplay emotion={displayEmotion} />
         </motion.div>
 
         {/* Movie Suggestions */}

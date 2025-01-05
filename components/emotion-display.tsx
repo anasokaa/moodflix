@@ -2,13 +2,22 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Smile, Frown, Angry, Meh, AlertCircle, Heart, Dizzy } from 'lucide-react'
 
 const emotionIcons = {
+  // Face++ API emotions
   happiness: { icon: Smile, label: "Happy" },
   sadness: { icon: Frown, label: "Sad" },
   anger: { icon: Angry, label: "Angry" },
   surprise: { icon: AlertCircle, label: "Surprised" },
   neutral: { icon: Meh, label: "Neutral" },
   fear: { icon: Dizzy, label: "Fearful" },
-  disgust: { icon: Angry, label: "Disgusted" }
+  disgust: { icon: Angry, label: "Disgusted" },
+  
+  // Alternative spellings and variations
+  happy: { icon: Smile, label: "Happy" },
+  sad: { icon: Frown, label: "Sad" },
+  angry: { icon: Angry, label: "Angry" },
+  surprised: { icon: AlertCircle, label: "Surprised" },
+  fearful: { icon: Dizzy, label: "Fearful" },
+  disgusted: { icon: Angry, label: "Disgusted" }
 }
 
 interface EmotionDisplayProps {
@@ -16,7 +25,11 @@ interface EmotionDisplayProps {
 }
 
 export function EmotionDisplay({ emotion }: EmotionDisplayProps) {
-  const emotionData = emotionIcons[emotion.toLowerCase() as keyof typeof emotionIcons] || emotionIcons.neutral
+  // Normalize the emotion string
+  const normalizedEmotion = emotion.toLowerCase().trim()
+  
+  // Get the emotion data or fallback to neutral
+  const emotionData = emotionIcons[normalizedEmotion as keyof typeof emotionIcons] || emotionIcons.neutral
   const Icon = emotionData.icon
 
   return (
