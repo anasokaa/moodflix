@@ -95,7 +95,7 @@ Remember: This is more than just a movie suggestion - it's an opportunity to pro
         !suggestion.emotionalImpact ||
         !Array.isArray(suggestion.streamingPlatforms) ||
         suggestion.streamingPlatforms.length === 0 ||
-        !suggestion.streamingPlatforms.some(platform => platformNames.includes(platform))) {
+        !suggestion.streamingPlatforms.some((platform: string) => platformNames.includes(platform))) {
       throw new Error('Invalid movie suggestion format or no matching platforms')
     }
 
@@ -107,7 +107,7 @@ Remember: This is more than just a movie suggestion - it's an opportunity to pro
 
     // Filter streaming platforms to only include available ones
     const availablePlatformsSet = new Set(platformNames)
-    const filteredPlatforms = suggestion.streamingPlatforms.filter(platform => 
+    const filteredPlatforms = suggestion.streamingPlatforms.filter((platform: string) => 
       availablePlatformsSet.has(platform)
     )
 
