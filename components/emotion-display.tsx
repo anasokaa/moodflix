@@ -1,5 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card"
-import { Smile, Frown, Angry, Meh, AlertCircle, Heart, Dizzy } from 'lucide-react'
+import { Smile, Frown, Angry, Meh, AlertCircle, Heart, Skull } from 'lucide-react'
 
 const emotionIcons = {
   // Face++ API emotions
@@ -8,7 +8,7 @@ const emotionIcons = {
   anger: { icon: Angry, label: "Angry" },
   surprise: { icon: AlertCircle, label: "Surprised" },
   neutral: { icon: Meh, label: "Neutral" },
-  fear: { icon: Dizzy, label: "Fearful" },
+  fear: { icon: Skull, label: "Fearful" },
   disgust: { icon: Angry, label: "Disgusted" },
   
   // Alternative spellings and variations
@@ -16,7 +16,7 @@ const emotionIcons = {
   sad: { icon: Frown, label: "Sad" },
   angry: { icon: Angry, label: "Angry" },
   surprised: { icon: AlertCircle, label: "Surprised" },
-  fearful: { icon: Dizzy, label: "Fearful" },
+  fearful: { icon: Skull, label: "Fearful" },
   disgusted: { icon: Angry, label: "Disgusted" }
 }
 
