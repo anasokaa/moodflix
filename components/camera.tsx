@@ -11,6 +11,7 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
   const [isActive, setIsActive] = useState(false)
   const [error, setError] = useState<string>()
   const { t } = useLanguage()
+  const [isInitializing, setIsInitializing] = useState(false)
 
   // Clean up function to stop all tracks
   const stopAllTracks = useCallback(() => {
@@ -22,34 +23,45 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
 
   const startCamera = useCallback(async () => {
     try {
+      setIsInitializing(true)
+      console.log('Starting camera initialization...')
       // First, clean up any existing streams
       stopAllTracks()
       setError(undefined)
       setIsActive(false)
 
-      // Request camera access with lower resolution first
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { 
+      console.log('Requesting camera access...')
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: {
           facingMode: 'user',
-          width: { ideal: 640 }, // Lower resolution
-          height: { ideal: 480 }
-        } 
+          width: { ideal: 1280 },
+          height: { ideal: 720 }
+        },
+        audio: false
       })
       
+      console.log('Camera access granted, setting up video stream...')
       streamRef.current = stream
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream
-        
-        // Wait for video to be ready
-        await new Promise((resolve) => {
+        videoRef.current.onloadedmetadata = () => {
+          console.log('Video metadata loaded')
           if (videoRef.current) {
-            videoRef.current.onloadedmetadata = resolve
+            videoRef.current.play()
+              .then(() => {
+                console.log('Video playback started successfully')
+                setIsActive(true)
+              })
+              .catch((playError) => {
+                console.error('Error playing video:', playError)
+                throw playError
+              })
           }
-        })
-
-        await videoRef.current.play()
-        setIsActive(true)
+        }
+      } else {
+        console.error('Video ref is null')
+        throw new Error('Video element not found')
       }
     } catch (err) {
       console.error('Error accessing camera:', err)
@@ -67,6 +79,8 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
         setError(t('camera.error'))
       }
       stopAllTracks()
+    } finally {
+      setIsInitializing(false)
     }
   }, [t, stopAllTracks])
 
@@ -127,17 +141,21 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
 
   return (
     <div className="w-full max-w-2xl mx-auto">
-      <div className="relative aspect-video rounded-2xl overflow-hidden bg-black/10 backdrop-blur-sm border border-primary/10">
-        {isActive ? (
-          <>
+      <div className="relative aspect-video rounded-2xl overflow-hidden bg-black border border-primary/10">
+        {isActive && (
+          <div className="absolute inset-0">
             <video
               ref={videoRef}
               autoPlay
               playsInline
               muted
-              className="w-full h-full object-cover transform scale-x-[-1]"
+              className="absolute inset-0 w-full h-full object-cover transform scale-x-[-1]"
             />
-            
+          </div>
+        )}
+        
+        {isActive && (
+          <>
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <motion.div 
                 className="w-64 h-64 border-2 border-dashed border-white/30 rounded-full"
@@ -163,7 +181,9 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
               <CameraIcon className="w-8 h-8" />
             </motion.button>
           </>
-        ) : (
+        )}
+
+        {!isActive && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-6 p-6">
             {isLoading ? (
               <motion.div
@@ -173,6 +193,15 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
               >
                 <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
                 <p className="text-lg font-medium text-primary">{t('camera.analyzing')}</p>
+              </motion.div>
+            ) : isInitializing ? (
+              <motion.div
+                className="flex flex-col items-center gap-4"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+                <p className="text-lg font-medium text-primary">Initializing camera...</p>
               </motion.div>
             ) : (
               <motion.button
@@ -187,6 +216,14 @@ export function Camera({ onCapture, isLoading }: { onCapture: (imageData: string
             )}
           </div>
         )}
+      </div>
+      
+      {/* Debug info */}
+      <div className="mt-4 text-sm text-primary/60">
+        <p>Camera status: {isActive ? 'Active' : 'Inactive'}</p>
+        <p>Loading: {isLoading ? 'Yes' : 'No'}</p>
+        <p>Initializing: {isInitializing ? 'Yes' : 'No'}</p>
+        {error && <p className="text-destructive">Error: {error}</p>}
       </div>
     </div>
   )
