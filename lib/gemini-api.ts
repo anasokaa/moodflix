@@ -97,12 +97,18 @@ Format the response as a JSON array with this structure:
         try {
           // Extract the movie title without the year
           const titleWithoutYear = movie.title.replace(/\s*\([^)]*\)$/, '')
+          console.log('Fetching poster for movie:', titleWithoutYear)
           const details = await getMovieDetails(titleWithoutYear)
           
           if (!details) {
-            throw new Error(`No details found for movie: ${titleWithoutYear}`)
+            console.log('No details found for movie:', titleWithoutYear)
+            return {
+              ...movie,
+              posterUrl: 'https://via.placeholder.com/300x450?text=No+Poster'
+            }
           }
 
+          console.log('Got poster URL:', details.posterUrl)
           return {
             ...movie,
             posterUrl: details.posterUrl
@@ -111,7 +117,7 @@ Format the response as a JSON array with this structure:
           console.error(`Error getting poster for ${movie.title}:`, error)
           return {
             ...movie,
-            posterUrl: '/movie-placeholder.jpg'
+            posterUrl: 'https://via.placeholder.com/300x450?text=No+Poster'
           }
         }
       })

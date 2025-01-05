@@ -132,28 +132,41 @@ export async function getMovieDetails(title: string): Promise<Movie | null> {
   }
 
   try {
+    console.log('OMDB API: Fetching details for movie:', title)
     const response = await fetch(
       `https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${apiKey}`
     )
 
     if (!response.ok) {
+      console.error('OMDB API: Response not OK:', response.status)
       throw new Error(`OMDB API error: ${response.status}`)
     }
 
     const data = await response.json()
+    console.log('OMDB API: Response data:', data)
+
     if (data.Error) {
+      console.error('OMDB API: Error in response:', data.Error)
       throw new Error(`OMDB API error: ${data.Error}`)
     }
 
+    // Ensure we have a valid poster URL
+    const posterUrl = data.Poster && data.Poster !== 'N/A' 
+      ? data.Poster 
+      : `https://image.tmdb.org/t/p/w500${data.Poster}` // Try TMDB format
+        || 'https://via.placeholder.com/300x450?text=No+Poster' // Fallback to placeholder
+
+    console.log('OMDB API: Using poster URL:', posterUrl)
+
     return {
       title: data.Title || title,
-      description: '',
+      description: data.Plot || '',
       matchReason: '',
-      posterUrl: data.Poster !== 'N/A' ? data.Poster : '/movie-placeholder.jpg',
+      posterUrl,
       streamingPlatforms: []
     }
   } catch (error) {
     console.error('OMDB API error:', error)
-    throw error
+    return null
   }
 } 
