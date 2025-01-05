@@ -44,33 +44,25 @@ export async function getMovieSuggestions(
   const intensity = emotionEntry[1]
 
   // Create a more engaging and specific prompt
-  const prompt = `You are an empathetic movie expert with deep knowledge of cinema's emotional impact. Looking at someone experiencing "${dominantEmotion}" with an intensity of ${(intensity * 100).toFixed(0)}%, suggest ONE perfect movie that would genuinely resonate with and enhance their emotional state.
+  const prompt = `You are an empathetic movie expert. Based on someone experiencing "${dominantEmotion}" with ${(intensity * 100).toFixed(0)}% intensity, suggest ONE perfect movie.
 
-${previousMovies.length > 0 ? `\nTo keep suggestions fresh and exciting, please DO NOT recommend any of these previously suggested movies: ${previousMovies.join(', ')}` : ''}
+${previousMovies.length > 0 ? `Do not suggest any of these movies: ${previousMovies.join(', ')}` : ''}
 
-The user has access to these streaming platforms: ${platformNames.join(', ')}
-You MUST only suggest movies available on these platforms.
-
-Consider these aspects when choosing the movie:
-1. How the movie's themes and emotional journey align with ${dominantEmotion}
-2. What specific scenes or elements would be particularly impactful
-3. Why this movie would be especially meaningful in their current emotional state
-4. How the movie could help process or complement their feelings
+Available platforms: ${platformNames.join(', ')}
 
 Requirements:
-- Choose a highly-rated movie (IMDb 7+ or critically acclaimed)
-- Can be any genre that fits emotionally (mainstream hits or hidden gems)
-- MUST be available on one or more of the user's streaming platforms
-- Should have a compelling emotional arc that resonates with their mood
-- Include a fascinating behind-the-scenes fact that adds depth to the viewing experience
+- Must be available on one of the listed platforms
+- Should be highly-rated (IMDb 7+ or critically acclaimed)
+- Should match the emotional state
+- Include an interesting behind-the-scenes fact
 
-Format your response EXACTLY as follows (do not include any other text):
+Respond with ONLY a JSON object in this format:
 {
   "title": "Movie Title (Year)",
-  "matchReason": "A thoughtful explanation of why this movie is perfect for their emotional state",
-  "emotionalImpact": "How this movie could positively influence their current mood",
-  "streamingPlatforms": ["Platform1", "Platform2"],
-  "funFact": "An interesting production fact or trivia"
+  "matchReason": "Why this movie fits their emotional state",
+  "emotionalImpact": "How it influences their mood",
+  "streamingPlatforms": ["Platform1"],
+  "funFact": "Interesting fact"
 }`
 
   try {
@@ -85,6 +77,7 @@ Format your response EXACTLY as follows (do not include any other text):
     let cleanedText = text
       .replace(/```json\s*/g, '')
       .replace(/```/g, '')
+      .replace(/[\u201C\u201D]/g, '"') // Replace curly quotes with straight quotes
       .trim()
 
     // Try to find JSON object in the response
