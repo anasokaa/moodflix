@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react'
 import { Camera } from '@/components/camera'
 import { MovieSuggestions } from '@/components/movie-suggestions'
+import { EmotionDisplay } from '@/components/emotion-display'
 import { motion } from 'framer-motion'
 import { useLanguage } from '@/lib/language-context'
 
@@ -107,6 +108,16 @@ export default function ClientPage() {
         className="max-w-6xl mx-auto space-y-12"
       >
         <Camera onCapture={handleImageCapture} isLoading={isLoading} />
+
+        {emotions && !error && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="max-w-md mx-auto"
+          >
+            <EmotionDisplay emotion={Object.entries(emotions).reduce((a, b) => a[1] > b[1] ? a : b)[0]} />
+          </motion.div>
+        )}
 
         {(movies.length > 0 || error) && (
           <MovieSuggestions
