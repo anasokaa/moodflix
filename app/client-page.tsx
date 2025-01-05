@@ -35,10 +35,17 @@ export default function ClientPage() {
     try {
       setIsLoading(true)
 
+      // Get selected platforms from sessionStorage
+      const selectedPlatforms = sessionStorage.getItem('selectedPlatforms')
+      const platforms = selectedPlatforms ? JSON.parse(selectedPlatforms) : []
+
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ image: imageData })
+        body: JSON.stringify({ 
+          image: imageData,
+          platforms
+        })
       })
 
       const data = await response.json()

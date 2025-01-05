@@ -5,7 +5,7 @@ import { getMovieSuggestions } from '@/lib/gemini-api'
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { image, emotions: previousEmotions, previousMovies } = body
+    const { image, emotions: previousEmotions, previousMovies, platforms } = body
 
     let emotions;
 
@@ -49,7 +49,7 @@ export async function POST(request: Request) {
     // Get personalized movie suggestions using Gemini
     console.log('Getting movie suggestions...')
     try {
-      const movies = await getMovieSuggestions(emotions, 'en', previousMovies)
+      const movies = await getMovieSuggestions(emotions, 'en', previousMovies, platforms || [])
       console.log('Got movie suggestions:', movies)
 
       if (!movies || movies.length === 0) {
