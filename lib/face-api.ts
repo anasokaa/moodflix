@@ -1,4 +1,5 @@
 import * as faceapi from 'face-api.js'
+import { loadModels } from './face-api-loader'
 
 interface EmotionData {
   anger: number
@@ -17,9 +18,8 @@ export async function analyzeImage(imageData: string): Promise<EmotionData> {
       throw new Error('Face detection is only available in browser environment')
     }
 
-    // Load models
-    await faceapi.nets.faceExpressionNet.loadFromUri('/models')
-    await faceapi.nets.tinyFaceDetector.loadFromUri('/models')
+    // Ensure models are loaded
+    await loadModels()
 
     // Create an HTML image element
     const img = new Image()

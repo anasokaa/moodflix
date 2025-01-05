@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { useLanguage } from '@/lib/language-context'
 import { Camera as CameraIcon } from 'lucide-react'
 import { analyzeImage } from '@/lib/face-api'
+import { loadModels } from '@/lib/face-api-loader'
 
 interface CameraProps {
   onCapture: (imageData: string, emotions: any) => void
@@ -15,6 +16,7 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
   const [cameraActive, setCameraActive] = useState(false)
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [isInitializing, setIsInitializing] = useState(false)
   const videoRef = useRef<HTMLVideoElement>(null)
   const streamRef = useRef<MediaStream | null>(null)
   const { t } = useLanguage()
@@ -22,6 +24,11 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
   const startCamera = useCallback(async () => {
     try {
       setError(null)
+      setIsInitializing(true)
+
+      // Load face-api.js models
+      await loadModels()
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
           facingMode: 'user',
@@ -38,6 +45,8 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
     } catch (err) {
       console.error('Error accessing camera:', err)
       setError(t('camera.error'))
+    } finally {
+      setIsInitializing(false)
     }
   }, [t])
 
@@ -118,11 +127,13 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
           {!cameraActive && !capturedImage && (
             <Button
               onClick={startCamera}
-              disabled={isLoading}
+              disabled={isLoading || isInitializing}
               className="flex items-center gap-2"
             >
               {isLoading ? (
                 t('loading.camera')
+              ) : isInitializing ? (
+                'Initializing...'
               ) : (
                 <>
                   <CameraIcon className="w-4 h-4" />
