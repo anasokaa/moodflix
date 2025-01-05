@@ -1,13 +1,14 @@
 import { Card, CardContent } from "@/components/ui/card"
-import { Smile, Frown, Angry, AlertCircle, Meh, Ghost } from 'lucide-react'
+import { Smile, Frown, Angry, Meh, Ghost, Heart, Dizzy } from 'lucide-react'
 
 const emotionIcons = {
-  happy: Smile,
-  sad: Frown,
-  angry: Angry,
-  surprised: AlertCircle,
-  neutral: Meh,
-  fearful: Ghost
+  happiness: { icon: Heart, label: "Happy" },
+  sadness: { icon: Frown, label: "Sad" },
+  anger: { icon: Angry, label: "Angry" },
+  surprise: { icon: Dizzy, label: "Surprised" },
+  neutral: { icon: Meh, label: "Neutral" },
+  fear: { icon: Ghost, label: "Fearful" },
+  disgust: { icon: Angry, label: "Disgusted" }
 }
 
 interface EmotionDisplayProps {
@@ -15,7 +16,8 @@ interface EmotionDisplayProps {
 }
 
 export function EmotionDisplay({ emotion }: EmotionDisplayProps) {
-  const Icon = emotionIcons[emotion as keyof typeof emotionIcons] || Meh
+  const emotionData = emotionIcons[emotion.toLowerCase() as keyof typeof emotionIcons] || emotionIcons.neutral
+  const Icon = emotionData.icon
 
   return (
     <Card className="bg-primary/5 border-none">
@@ -23,10 +25,10 @@ export function EmotionDisplay({ emotion }: EmotionDisplayProps) {
         <Icon className="w-8 h-8 text-primary" />
         <div className="text-center">
           <h3 className="text-xl font-semibold capitalize">
-            {emotion} Mood
+            {emotionData.label} Mood
           </h3>
           <p className="text-sm text-muted-foreground">
-            Here are some movies that match your current mood
+            Here's a movie that matches your current mood
           </p>
         </div>
       </CardContent>
