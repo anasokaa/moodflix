@@ -4,22 +4,22 @@ import { motion } from 'framer-motion'
 import { useEffect, useState } from 'react'
 
 interface EmotionColors {
-  happiness: string
-  sadness: string
-  anger: string
-  fear: string
-  disgust: string
-  surprise: string
+  happy: string
+  sad: string
+  angry: string
+  fearful: string
+  disgusted: string
+  surprised: string
   neutral: string
 }
 
 const emotionColors: EmotionColors = {
-  happiness: '#FFD700', // Gold
-  sadness: '#4169E1', // Royal Blue
-  anger: '#FF4500', // Red Orange
-  fear: '#800080', // Purple
-  disgust: '#32CD32', // Lime Green
-  surprise: '#FF69B4', // Hot Pink
+  happy: '#FFD700', // Gold
+  sad: '#4169E1', // Royal Blue
+  angry: '#FF4500', // Red Orange
+  fearful: '#800080', // Purple
+  disgusted: '#32CD32', // Lime Green
+  surprised: '#FF69B4', // Hot Pink
   neutral: '#FFFFFF', // White
 }
 

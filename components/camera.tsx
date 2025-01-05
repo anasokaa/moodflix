@@ -8,9 +8,11 @@ import * as faceapi from 'face-api.js'
 import { MoodRing } from './mood-ring'
 
 interface CameraProps {
-  onCapture: (imageData: string, emotions: any) => void
+  onCapture: (imageData: string, emotions: faceapi.FaceExpressions) => void
   isLoading: boolean
 }
+
+type EmotionKey = 'neutral' | 'happy' | 'sad' | 'angry' | 'fearful' | 'disgusted' | 'surprised'
 
 export function Camera({ onCapture, isLoading }: CameraProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -18,7 +20,7 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
   const streamRef = useRef<MediaStream | null>(null)
   const [isCameraReady, setIsCameraReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [currentEmotion, setCurrentEmotion] = useState<string>('neutral')
+  const [currentEmotion, setCurrentEmotion] = useState<EmotionKey>('neutral')
   const [emotionIntensity, setEmotionIntensity] = useState(0.5)
 
   // Load face-api models
@@ -77,11 +79,10 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
 
         if (detection) {
           const emotions = detection.expressions
-          const dominantEmotion = Object.entries(emotions).reduce((a, b) => 
+          const entries = Object.entries(emotions) as [EmotionKey, number][]
+          const [dominantEmotion, intensity] = entries.reduce((a, b) => 
             a[1] > b[1] ? a : b
-          )[0]
-          
-          const intensity = emotions[dominantEmotion]
+          )
           
           setCurrentEmotion(dominantEmotion)
           setEmotionIntensity(intensity)
@@ -152,11 +153,8 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
       // Get image data
       const imageData = canvas.toDataURL('image/jpeg')
 
-      // Extract emotions
-      const emotions = detection.expressions
-
       // Call onCapture with image and emotions
-      onCapture(imageData, emotions)
+      onCapture(imageData, detection.expressions)
     } catch (err) {
       console.error('Error capturing image:', err)
       setError('Failed to capture and analyze image')
@@ -168,7 +166,7 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
       <div className="relative h-full flex flex-col">
         <div className="flex-1 relative bg-muted">
           <MoodRing 
-            dominantEmotion={currentEmotion as any} 
+            dominantEmotion={currentEmotion} 
             intensity={emotionIntensity}
           />
           <video
