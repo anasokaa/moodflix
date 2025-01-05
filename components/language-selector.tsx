@@ -1,10 +1,7 @@
 'use client'
 
 import { Button } from '@/components/ui/button'
-import { useLanguage } from '@/lib/language-context'
-import { Languages } from 'lucide-react'
-
-type Language = 'en' | 'fr'
+import { useLanguage, type Language } from '@/lib/language-context'
 
 const languageNames: Record<Language, string> = {
   en: 'English 🇬🇧',
@@ -12,7 +9,7 @@ const languageNames: Record<Language, string> = {
 }
 
 export function LanguageSelector() {
-  const { t, language, setLanguage } = useLanguage()
+  const { language, setLanguage } = useLanguage()
 
   const languages: Language[] = ['en', 'fr']
 
