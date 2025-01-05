@@ -3,7 +3,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { translations } from './translations'
 
-type Language = 'en' | 'fr'
+export type Language = 'en' | 'fr'
 
 interface LanguageContextType {
   language: Language
@@ -11,26 +11,29 @@ interface LanguageContextType {
   t: (key: string, params?: Record<string, any>) => string
 }
 
-const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
+const defaultLanguage: Language = 'en'
 
-function getStoredLanguage(): Language {
-  if (typeof window === 'undefined') return 'en'
-  return (localStorage.getItem('language') as Language) || 'en'
-}
+const LanguageContext = createContext<LanguageContextType>({
+  language: defaultLanguage,
+  setLanguage: () => {},
+  t: (key) => key,
+})
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en')
+  const [language, setLanguage] = useState<Language>(defaultLanguage)
+  const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    const storedLang = getStoredLanguage()
-    if (storedLang && (storedLang === 'en' || storedLang === 'fr')) {
-      setLanguage(storedLang)
+    setIsClient(true)
+    const savedLanguage = localStorage.getItem('language') as Language
+    if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'fr')) {
+      setLanguage(savedLanguage)
     }
   }, [])
 
   const handleSetLanguage = (lang: Language) => {
     setLanguage(lang)
-    if (typeof window !== 'undefined') {
+    if (isClient) {
       localStorage.setItem('language', lang)
     }
   }
@@ -43,13 +46,11 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
       if (value && typeof value === 'object' && k in value) {
         value = value[k]
       } else {
-        console.warn(`Translation key not found: ${key}`)
         return key
       }
     }
 
     if (typeof value !== 'string') {
-      console.warn(`Translation value is not a string: ${key}`)
       return key
     }
 
@@ -71,7 +72,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
 
 export function useLanguage() {
   const context = useContext(LanguageContext)
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useLanguage must be used within a LanguageProvider')
   }
   return context
