@@ -1,41 +1,62 @@
 'use client'
 
-import { createContext, useContext, useState, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, ReactNode } from 'react'
 import { translations } from './translations'
 
 type Language = 'en' | 'fr'
 
 interface LanguageContextType {
-  currentLanguage: Language
+  language: Language
   setLanguage: (lang: Language) => void
-  t: (key: string) => string
+  t: (key: string, params?: Record<string, any>) => string
 }
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined)
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [currentLanguage, setCurrentLanguage] = useState<Language>('en')
+export function LanguageProvider({ children }: { children: ReactNode }) {
+  const [language, setLanguage] = useState<Language>('en')
 
-  const t = useCallback((key: string): string => {
-    const keys = key.split('.')
-    let value: any = translations[currentLanguage]
-    
-    for (const k of keys) {
-      if (value === undefined) return key
-      value = value[k]
+  useEffect(() => {
+    const savedLanguage = localStorage.getItem('language') as Language
+    if (savedLanguage && (savedLanguage === 'en' || savedLanguage === 'fr')) {
+      setLanguage(savedLanguage)
     }
-    
-    return value || key
-  }, [currentLanguage])
+  }, [])
+
+  const handleSetLanguage = (lang: Language) => {
+    setLanguage(lang)
+    localStorage.setItem('language', lang)
+  }
+
+  const t = (key: string, params?: Record<string, any>) => {
+    const keys = key.split('.')
+    let value = translations[language]
+
+    for (const k of keys) {
+      if (value && typeof value === 'object' && k in value) {
+        value = value[k]
+      } else {
+        console.warn(`Translation key not found: ${key}`)
+        return key
+      }
+    }
+
+    if (typeof value !== 'string') {
+      console.warn(`Translation value is not a string: ${key}`)
+      return key
+    }
+
+    if (params) {
+      return value.replace(/\{\{(\w+)\}\}/g, (_, key) => 
+        params[key]?.toString() || `{{${key}}}`
+      )
+    }
+
+    return value
+  }
 
   return (
-    <LanguageContext.Provider 
-      value={{
-        currentLanguage,
-        setLanguage: setCurrentLanguage,
-        t
-      }}
-    >
+    <LanguageContext.Provider value={{ language, setLanguage: handleSetLanguage, t }}>
       {children}
     </LanguageContext.Provider>
   )
