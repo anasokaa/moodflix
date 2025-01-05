@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Camera as CameraIcon, Loader2 } from 'lucide-react'
 import * as faceapi from 'face-api.js'
+import { MoodRing } from './mood-ring'
 
 interface CameraProps {
   onCapture: (imageData: string, emotions: any) => void
@@ -17,6 +18,8 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
   const streamRef = useRef<MediaStream | null>(null)
   const [isCameraReady, setIsCameraReady] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [currentEmotion, setCurrentEmotion] = useState<string>('neutral')
+  const [emotionIntensity, setEmotionIntensity] = useState(0.5)
 
   // Load face-api models
   const loadModels = useCallback(async () => {
@@ -59,6 +62,47 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
       setIsCameraReady(false)
     }
   }, [loadModels])
+
+  // Real-time emotion detection
+  useEffect(() => {
+    let animationFrame: number
+
+    const detectEmotions = async () => {
+      if (!videoRef.current || !isCameraReady) return
+
+      try {
+        const detection = await faceapi
+          .detectSingleFace(videoRef.current, new faceapi.TinyFaceDetectorOptions())
+          .withFaceExpressions()
+
+        if (detection) {
+          const emotions = detection.expressions
+          const dominantEmotion = Object.entries(emotions).reduce((a, b) => 
+            a[1] > b[1] ? a : b
+          )[0]
+          
+          const intensity = emotions[dominantEmotion]
+          
+          setCurrentEmotion(dominantEmotion)
+          setEmotionIntensity(intensity)
+        }
+      } catch (err) {
+        console.error('Error detecting emotions:', err)
+      }
+
+      animationFrame = requestAnimationFrame(detectEmotions)
+    }
+
+    if (isCameraReady) {
+      detectEmotions()
+    }
+
+    return () => {
+      if (animationFrame) {
+        cancelAnimationFrame(animationFrame)
+      }
+    }
+  }, [isCameraReady])
 
   // Cleanup function
   const cleanup = useCallback(() => {
@@ -120,15 +164,19 @@ export function Camera({ onCapture, isLoading }: CameraProps) {
   }, [onCapture, isLoading])
 
   return (
-    <Card className="overflow-hidden h-full">
+    <Card className="overflow-hidden h-full relative">
       <div className="relative h-full flex flex-col">
         <div className="flex-1 relative bg-muted">
+          <MoodRing 
+            dominantEmotion={currentEmotion as any} 
+            intensity={emotionIntensity}
+          />
           <video
             ref={videoRef}
             autoPlay
             playsInline
             muted
-            className="absolute inset-0 w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover rounded-lg"
             onLoadedMetadata={() => setIsCameraReady(true)}
           />
           <canvas ref={canvasRef} className="hidden" />
