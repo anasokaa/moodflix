@@ -92,9 +92,9 @@ export default function MovieRevealPage() {
   const data: StoredData = storedData ? JSON.parse(storedData) : { movies: [], emotions: {} as EmotionData }
 
   // Get the dominant emotion
-  const dominantEmotion = data.emotions ? 
-    Object.entries(data.emotions).reduce((a, b) => a[1] > b[1] ? a : b)[0] 
-    : null
+  const dominantEmotion = data.emotions && Object.keys(data.emotions).length > 0 ? 
+    Object.entries(data.emotions).reduce((a, b) => a[1] > b[1] ? a : b, ['neutral', 0])[0] 
+    : 'neutral'
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-black via-background to-primary/5 py-12">
@@ -105,16 +105,14 @@ export default function MovieRevealPage() {
         className="container mx-auto px-4 space-y-8"
       >
         {/* Emotion Display */}
-        {dominantEmotion && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5 }}
-            className="max-w-md mx-auto"
-          >
-            <EmotionDisplay emotion={dominantEmotion} />
-          </motion.div>
-        )}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="max-w-md mx-auto"
+        >
+          <EmotionDisplay emotion={dominantEmotion} />
+        </motion.div>
 
         {/* Movie Suggestions */}
         <motion.div
