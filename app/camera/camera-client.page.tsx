@@ -6,6 +6,7 @@ import { Camera } from '@/components/camera'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLanguage } from '@/lib/language-context'
 import { Sparkles, Stars, Wand2, Users } from 'lucide-react'
+import { SiteHeader } from '@/components/site-header'
 
 interface Movie {
   title: string
@@ -202,31 +203,24 @@ export default function CameraClient() {
   }, [router, t, currentPerson, totalPeople, isLoading])
 
   return (
-    <div className="h-screen flex flex-col p-4 bg-gradient-to-b from-black via-background to-primary/5">
+    <div className="h-screen flex flex-col bg-gradient-to-b from-black via-background to-primary/5">
       <AnimatePresence mode="wait">
         <TransitionAnimation isTransitioning={isTransitioning} />
       </AnimatePresence>
 
-      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full gap-4">
-        <motion.h1
-          className="text-3xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.3 }}
-        >
-          MoodFlix ✨
-        </motion.h1>
+      <SiteHeader />
 
+      <div className="flex-1 flex flex-col max-w-4xl mx-auto w-full gap-4 p-4">
         {totalPeople > 1 && (
           <div className="text-center">
             <div className="flex items-center justify-center gap-2">
               <Users className="w-5 h-5" />
               <span className="text-lg font-medium">
-                Person {currentPerson + 1} of {totalPeople}
+                {t('camera.person', { current: currentPerson + 1, total: totalPeople })}
               </span>
             </div>
             <p className="text-sm text-muted-foreground">
-              Let's capture your mood!
+              {t('camera.capture_mood')}
             </p>
           </div>
         )}

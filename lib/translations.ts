@@ -1,48 +1,116 @@
 export const translations = {
   en: {
-    welcome: {
-      title: "MoodFlix",
-      subtitle: "Discover movies that match your mood through the magic of AI! 🎬",
-      start: "Let's Find Your Movies!"
+    common: {
+      title: 'MoodFlix',
+      loading: 'Loading...',
+      error: 'An error occurred',
+      back: 'Back',
+      next: 'Next',
+      continue: 'Continue',
+    },
+    home: {
+      title: 'Welcome to MoodFlix',
+      subtitle: 'Let us find the perfect movie for your mood',
+      solo: 'Just Me',
+      group: 'With Others',
     },
     camera: {
-      start: "Take a Selfie",
-      retake: "Try Again",
-      analyzing: "Analyzing your mood...",
-      error: "Something went wrong. Please try again!",
-      permission: "Please allow camera access to continue",
-      inUse: "Camera is in use by another application. Please close it and try again.",
-      notFound: "No camera found. Please make sure your camera is connected."
+      title: 'Take a Selfie',
+      start: 'Start Camera',
+      take: 'Take a Selfie',
+      retake: 'Retake',
+      person: 'Person {{current}} of {{total}}',
+      capture_mood: "Let's capture your mood!",
+      error: {
+        no_face: 'No face detected. Please ensure your face is clearly visible.',
+        camera_access: 'Unable to access camera',
+        models: 'Failed to load face detection models',
+        capture: 'Failed to capture and analyze image',
+      },
+    },
+    streaming: {
+      title: 'Select Your Streaming Platforms',
+      subtitle: 'Choose the platforms you have access to',
+      netflix: 'Netflix',
+      prime: 'Prime Video',
+      disney: 'Disney+',
+      hbo: 'HBO Max',
+      hulu: 'Hulu',
+      apple: 'Apple TV+',
     },
     movies: {
-      title: "Your Movie Matches",
-      loading: "Finding perfect movies for you...",
-      error: "Couldn't find movies. Please try again!",
-      regenerate: "Show Me More Movies",
-      tryAgain: "Try Another Mood"
-    }
+      title: 'Your Movie Suggestion',
+      loading: 'Finding the perfect movie...',
+      error: 'Failed to get movie suggestions',
+      more: 'Show me another movie',
+      match: 'Match Reason',
+      available_on: 'Available on',
+    },
+    emotions: {
+      happy: 'Happy',
+      sad: 'Sad',
+      angry: 'Angry',
+      fearful: 'Fearful',
+      disgusted: 'Disgusted',
+      surprised: 'Surprised',
+      neutral: 'Neutral',
+    },
   },
   fr: {
-    welcome: {
-      title: "MoodFlix",
-      subtitle: "Découvrez des films qui correspondent à votre humeur grâce à l'IA ! 🎬",
-      start: "Trouvons Vos Films !"
+    common: {
+      title: 'MoodFlix',
+      loading: 'Chargement...',
+      error: 'Une erreur est survenue',
+      back: 'Retour',
+      next: 'Suivant',
+      continue: 'Continuer',
+    },
+    home: {
+      title: 'Bienvenue sur MoodFlix',
+      subtitle: 'Trouvons le film parfait pour votre humeur',
+      solo: 'Juste Moi',
+      group: 'Avec d\'Autres',
     },
     camera: {
-      start: "Prenez un Selfie",
-      retake: "Réessayer",
-      analyzing: "Analyse de votre humeur...",
-      error: "Une erreur s'est produite. Veuillez réessayer !",
-      permission: "Veuillez autoriser l'accès à la caméra pour continuer",
-      inUse: "La caméra est utilisée par une autre application. Veuillez la fermer et réessayer.",
-      notFound: "Aucune caméra trouvée. Veuillez vérifier que votre caméra est connectée."
+      title: 'Prenez un Selfie',
+      start: 'Démarrer la Caméra',
+      take: 'Prendre un Selfie',
+      retake: 'Reprendre',
+      person: 'Personne {{current}} sur {{total}}',
+      capture_mood: 'Capturons votre humeur !',
+      error: {
+        no_face: 'Aucun visage détecté. Assurez-vous que votre visage est bien visible.',
+        camera_access: 'Impossible d\'accéder à la caméra',
+        models: 'Échec du chargement des modèles de détection',
+        capture: 'Échec de la capture et de l\'analyse de l\'image',
+      },
+    },
+    streaming: {
+      title: 'Sélectionnez Vos Plateformes de Streaming',
+      subtitle: 'Choisissez les plateformes auxquelles vous avez accès',
+      netflix: 'Netflix',
+      prime: 'Prime Video',
+      disney: 'Disney+',
+      hbo: 'HBO Max',
+      hulu: 'Hulu',
+      apple: 'Apple TV+',
     },
     movies: {
-      title: "Vos Films",
-      loading: "Recherche des films parfaits pour vous...",
-      error: "Impossible de trouver des films. Veuillez réessayer !",
-      regenerate: "Plus de Films",
-      tryAgain: "Essayer une Autre Humeur"
-    }
-  }
+      title: 'Votre Suggestion de Film',
+      loading: 'Recherche du film parfait...',
+      error: 'Échec de l\'obtention des suggestions de films',
+      more: 'Montrez-moi un autre film',
+      match: 'Raison du Match',
+      available_on: 'Disponible sur',
+    },
+    emotions: {
+      happy: 'Heureux',
+      sad: 'Triste',
+      angry: 'En Colère',
+      fearful: 'Effrayé',
+      disgusted: 'Dégoûté',
+      surprised: 'Surpris',
+      neutral: 'Neutre',
+    },
+  },
 } 

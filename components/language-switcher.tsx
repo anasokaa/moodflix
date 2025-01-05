@@ -1,31 +1,28 @@
 'use client'
 
-import { useLanguage } from '@/lib/language-context'
 import { Button } from '@/components/ui/button'
-
-type Language = 'en' | 'fr'
+import { useLanguage } from '@/lib/language-context'
+import { Languages } from 'lucide-react'
 
 export function LanguageSwitcher() {
-  const { currentLanguage, setLanguage } = useLanguage()
+  const { language, setLanguage } = useLanguage()
 
-  const languages: Language[] = ['en', 'fr']
-  const languageNames: Record<Language, string> = {
-    en: 'English 🇬🇧',
-    fr: 'Français 🇫🇷'
+  const toggleLanguage = () => {
+    setLanguage(language === 'en' ? 'fr' : 'en')
   }
 
   return (
-    <div className="flex gap-2">
-      {languages.map((lang) => (
-        <Button
-          key={lang}
-          variant={currentLanguage === lang ? 'default' : 'outline'}
-          onClick={() => setLanguage(lang)}
-          className="rounded-full"
-        >
-          {languageNames[lang]}
-        </Button>
-      ))}
-    </div>
+    <Button
+      variant="ghost"
+      size="icon"
+      onClick={toggleLanguage}
+      className="rounded-full"
+      title={language === 'en' ? 'Switch to French' : 'Switch to English'}
+    >
+      <Languages className="w-5 h-5" />
+      <span className="sr-only">
+        {language === 'en' ? 'Switch to French' : 'Switch to English'}
+      </span>
+    </Button>
   )
 } 
