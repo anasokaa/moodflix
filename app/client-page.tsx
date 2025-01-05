@@ -54,7 +54,9 @@ export default function ClientPage() {
       }
 
       setMovies(data.movies)
-      setEmotions(data.emotions)
+      if (data.emotions) {
+        setEmotions(data.emotions)
+      }
     } catch (err) {
       console.error('Error analyzing image:', err)
       setError(err instanceof Error ? err.message : t('movies.error'))
