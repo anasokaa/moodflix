@@ -4,14 +4,30 @@ import { getMovieSuggestions } from '@/lib/gemini-api'
 
 export async function POST(request: Request) {
   try {
+    // Log environment variables (without revealing the actual values)
+    console.log('Environment variables check:', {
+      hasFaceApiKey: !!process.env.FACE_API_KEY,
+      hasFaceApiSecret: !!process.env.FACE_API_SECRET,
+      hasGeminiApiKey: !!process.env.GEMINI_API_KEY,
+      hasOmdbApiKey: !!process.env.OMDB_API_KEY
+    })
+
     const body = await request.json()
     const { image, emotions: previousEmotions, previousMovies, platforms } = body
+
+    console.log('Request received:', {
+      hasImage: !!image,
+      hasPreviousEmotions: !!previousEmotions,
+      previousMoviesCount: previousMovies?.length || 0,
+      platformsCount: platforms?.length || 0
+    })
 
     let emotions;
 
     // If it's a regenerate request, use the previous emotions
     if (image === 'regenerate') {
       if (!previousEmotions) {
+        console.log('Regenerate request missing previous emotions')
         return NextResponse.json(
           { error: "No previous emotions found. Please take a new photo." },
           { status: 400 }
@@ -22,17 +38,26 @@ export async function POST(request: Request) {
     } else {
       // Analyze emotions using Face API
       console.log('Starting face analysis...')
-      const faceAnalysis = await analyzeFace(image)
-      
-      if (!faceAnalysis) {
+      try {
+        const faceAnalysis = await analyzeFace(image)
+        
+        if (!faceAnalysis) {
+          console.log('No face detected in the image')
+          return NextResponse.json(
+            { error: "No face detected in the image. Please ensure your face is clearly visible and try again." },
+            { status: 400 }
+          )
+        }
+
+        console.log('Face analysis successful:', faceAnalysis.emotion)
+        emotions = faceAnalysis.emotion
+      } catch (faceError) {
+        console.error('Face API error:', faceError)
         return NextResponse.json(
-          { error: "No face detected in the image. Please ensure your face is clearly visible and try again." },
-          { status: 400 }
+          { error: "Error analyzing face. Please try again." },
+          { status: 500 }
         )
       }
-
-      console.log('Face analysis successful:', faceAnalysis.emotion)
-      emotions = faceAnalysis.emotion
     }
 
     // Validate emotion data
@@ -53,6 +78,7 @@ export async function POST(request: Request) {
       console.log('Got movie suggestions:', movies)
 
       if (!movies || movies.length === 0) {
+        console.log('No movies returned from Gemini API')
         return NextResponse.json(
           { error: "Could not generate movie suggestions. Please try again." },
           { status: 400 }
@@ -67,7 +93,7 @@ export async function POST(request: Request) {
     } catch (movieError) {
       console.error('Error getting movie suggestions:', movieError)
       return NextResponse.json(
-        { error: "Error processing movie suggestions. Please try again." },
+        { error: movieError instanceof Error ? movieError.message : "Error processing movie suggestions. Please try again." },
         { status: 500 }
       )
     }

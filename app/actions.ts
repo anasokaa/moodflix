@@ -3,11 +3,6 @@
 import { analyzeFace } from '@/lib/face-api'
 import { getMovieSuggestions } from '@/lib/gemini-api'
 
-// Set environment variables
-process.env.FACE_API_KEY = '-oM-qT3bDhPjrC5dCFLAlNk8ooNNMEcB'
-process.env.FACE_API_SECRET = 'O0C_0Akgc0Jg2L-w5MDI5BYkH60tFnpA'
-process.env.GEMINI_API_KEY = 'AIzaSyBya-gL9tn8Gp5Tl5Rzg3Dk5ke2yzWeGjY'
-
 // Store the last analyzed emotions
 let lastAnalyzedEmotions: any = null
 
