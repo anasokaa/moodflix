@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import dynamic from 'next/dynamic'
+import * as faceapi from 'face-api.js'
 
 export type EmotionKey = 'happy' | 'sad' | 'angry' | 'fearful' | 'disgusted' | 'surprised' | 'neutral'
 export type EmotionData = Record<EmotionKey, number>
@@ -19,8 +19,6 @@ interface UseFaceDetectionResult {
   detectEmotions: () => Promise<EmotionData | null>
 }
 
-let faceapi: typeof import('face-api.js') | null = null
-
 export function useFaceDetection({
   videoElement,
   isEnabled,
@@ -30,35 +28,22 @@ export function useFaceDetection({
   const [currentEmotion, setCurrentEmotion] = useState<EmotionKey>('neutral')
   const [emotionIntensity, setEmotionIntensity] = useState(0.5)
 
-  const loadFaceApi = useCallback(async () => {
-    if (typeof window === 'undefined') return false
-    if (faceapi) return true
-
-    try {
-      faceapi = await import('face-api.js')
-      return true
-    } catch (err) {
-      console.error('Failed to load face-api.js:', err)
-      onError?.('Failed to initialize face detection')
-      return false
-    }
-  }, [onError])
-
   const loadModels = useCallback(async () => {
-    if (!await loadFaceApi()) return false
+    if (typeof window === 'undefined') return false
 
     try {
       await Promise.all([
-        faceapi!.nets.tinyFaceDetector.loadFromUri('/models'),
-        faceapi!.nets.faceExpressionNet.loadFromUri('/models')
+        faceapi.nets.tinyFaceDetector.loadFromUri('/models'),
+        faceapi.nets.faceExpressionNet.loadFromUri('/models')
       ])
       setIsModelReady(true)
       return true
     } catch (err) {
+      console.error('Failed to load models:', err)
       onError?.('Failed to load face detection models')
       return false
     }
-  }, [loadFaceApi, onError])
+  }, [onError])
 
   useEffect(() => {
     if (!isModelReady) {
@@ -67,7 +52,7 @@ export function useFaceDetection({
   }, [isModelReady, loadModels])
 
   const detectEmotions = useCallback(async () => {
-    if (!videoElement || !isEnabled || !isModelReady || !faceapi) return null
+    if (!videoElement || !isEnabled || !isModelReady) return null
 
     try {
       const detection = await faceapi
@@ -110,5 +95,4 @@ export function useFaceDetection({
     isModelReady,
     detectEmotions
   }
-} 
 } 
