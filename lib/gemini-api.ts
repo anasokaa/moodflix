@@ -64,16 +64,14 @@ Requirements:
 - Should have a compelling emotional arc that resonates with their mood
 - Include a fascinating behind-the-scenes fact that adds depth to the viewing experience
 
-Format your response as a JSON object:
+Format your response EXACTLY as follows (do not include any other text):
 {
   "title": "Movie Title (Year)",
-  "matchReason": "A thoughtful, specific explanation of why this movie is perfect for their emotional state, mentioning key scenes or themes that will resonate (2-3 sentences)",
-  "emotionalImpact": "Describe how this movie could positively influence or complement their current mood (1-2 sentences)",
+  "matchReason": "A thoughtful explanation of why this movie is perfect for their emotional state",
+  "emotionalImpact": "How this movie could positively influence their current mood",
   "streamingPlatforms": ["Platform1", "Platform2"],
-  "funFact": "An interesting production fact or trivia that adds meaning to the viewing experience"
-}
-
-Remember: This is more than just a movie suggestion - it's an opportunity to provide emotional support and understanding through the power of cinema.`
+  "funFact": "An interesting production fact or trivia"
+}`
 
   try {
     console.log('Gemini API: Sending request for emotion:', dominantEmotion)
@@ -81,45 +79,65 @@ Remember: This is more than just a movie suggestion - it's an opportunity to pro
     const response = await result.response
     const text = response.text()
     
+    console.log('Gemini API raw response:', text)
+
     // Clean and parse the response
-    const cleanedText = text
-      .replace(/```json\s*/, '')
-      .replace(/```/, '')
+    let cleanedText = text
+      .replace(/```json\s*/g, '')
+      .replace(/```/g, '')
       .trim()
 
-    const suggestion = JSON.parse(cleanedText)
-    
-    // Validate the suggestion
-    if (!suggestion.title || 
-        !suggestion.matchReason || 
-        !suggestion.emotionalImpact ||
-        !Array.isArray(suggestion.streamingPlatforms) ||
-        suggestion.streamingPlatforms.length === 0 ||
-        !suggestion.streamingPlatforms.some((platform: string) => platformNames.includes(platform))) {
-      throw new Error('Invalid movie suggestion format or no matching platforms')
+    // Try to find JSON object in the response
+    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) {
+      console.error('Gemini API: No JSON object found in response')
+      throw new Error('Invalid response format')
     }
 
-    // Get movie details from OMDB
-    const movieDetails = await getMovieDetails(suggestion.title)
-    if (!movieDetails) {
-      throw new Error('Could not fetch movie details')
+    cleanedText = jsonMatch[0]
+    console.log('Gemini API cleaned response:', cleanedText)
+
+    try {
+      const suggestion = JSON.parse(cleanedText)
+      console.log('Gemini API parsed suggestion:', suggestion)
+
+      // Validate the suggestion
+      if (!suggestion.title || 
+          !suggestion.matchReason || 
+          !suggestion.emotionalImpact ||
+          !Array.isArray(suggestion.streamingPlatforms) ||
+          suggestion.streamingPlatforms.length === 0 ||
+          !suggestion.streamingPlatforms.some((platform: string) => platformNames.includes(platform))) {
+        console.error('Gemini API: Invalid suggestion format:', suggestion)
+        throw new Error('Invalid movie suggestion format or no matching platforms')
+      }
+
+      // Get movie details from OMDB
+      const movieDetails = await getMovieDetails(suggestion.title)
+      if (!movieDetails) {
+        throw new Error('Could not fetch movie details')
+      }
+
+      // Filter streaming platforms to only include available ones
+      const availablePlatformsSet = new Set(platformNames)
+      const filteredPlatforms = suggestion.streamingPlatforms.filter((platform: string) => 
+        availablePlatformsSet.has(platform)
+      )
+
+      // Combine Gemini and OMDB data
+      const completeMovie = {
+        ...movieDetails,
+        matchReason: `${suggestion.matchReason} ${suggestion.emotionalImpact}`,
+        streamingPlatforms: filteredPlatforms,
+        funFact: suggestion.funFact
+      }
+
+      return [completeMovie]
+    } catch (parseError) {
+      console.error('Gemini API: Error parsing JSON:', parseError)
+      console.error('Attempted to parse:', cleanedText)
+      throw new Error('Failed to parse movie suggestion')
     }
-
-    // Filter streaming platforms to only include available ones
-    const availablePlatformsSet = new Set(platformNames)
-    const filteredPlatforms = suggestion.streamingPlatforms.filter((platform: string) => 
-      availablePlatformsSet.has(platform)
-    )
-
-    // Combine Gemini and OMDB data
-    const completeMovie = {
-      ...movieDetails,
-      matchReason: `${suggestion.matchReason} ${suggestion.emotionalImpact}`,
-      streamingPlatforms: filteredPlatforms,
-      funFact: suggestion.funFact
-    }
-
-    return [completeMovie]
   } catch (error) {
     console.error('Gemini API error:', error)
     throw error
