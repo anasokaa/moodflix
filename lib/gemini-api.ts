@@ -89,7 +89,28 @@ Format the response as a JSON array with this structure:
       throw new Error('No valid movie suggestions')
     }
 
-    return validSuggestions
+    // Get movie details from OMDB API for posters
+    console.log('Gemini API: Fetching movie posters...')
+    const moviesWithPosters = await Promise.all(
+      validSuggestions.map(async (movie) => {
+        try {
+          const title = movie.title.replace(/\s*\(\d{4}\)$/, '') // Remove year from title
+          const details = await getMovieDetails(title)
+          return {
+            ...movie,
+            posterUrl: details?.posterUrl || '/movie-placeholder.jpg'
+          }
+        } catch (error) {
+          console.error(`Error getting poster for ${movie.title}:`, error)
+          return {
+            ...movie,
+            posterUrl: '/movie-placeholder.jpg'
+          }
+        }
+      })
+    )
+
+    return moviesWithPosters
   } catch (error) {
     console.error('Gemini API error:', error)
     throw error

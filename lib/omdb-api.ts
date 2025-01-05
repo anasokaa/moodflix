@@ -124,7 +124,7 @@ export async function getMovieSuggestions(emotions: EmotionData): Promise<Movie[
   }
 }
 
-export async function getMovieDetails(title: string): Promise<Movie | null> {
+export async function getMovieDetails(title: string) {
   const apiKey = process.env.OMDB_API_KEY
   if (!apiKey) {
     console.error('OMDB API: API key not configured')
@@ -132,35 +132,24 @@ export async function getMovieDetails(title: string): Promise<Movie | null> {
   }
 
   try {
-    console.log(`OMDB API: Fetching details for "${title}"`)
-    const url = `https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${apiKey}`
-    console.log('OMDB API: Request URL:', url)
-    
-    const response = await fetch(url)
-    console.log('OMDB API: Response status:', response.status)
-    
+    const response = await fetch(
+      `https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${apiKey}`
+    )
+
     if (!response.ok) {
-      console.error('OMDB API: Response not OK:', response.status)
-      return null
+      throw new Error(`OMDB API error: ${response.status}`)
     }
 
-    const data: OMDBResponse = await response.json()
-    console.log('OMDB API: Response data:', data)
-    
-    if (data.Response === 'True' && data.Poster && data.Poster !== 'N/A') {
-      return {
-        posterUrl: data.Poster,
-        title: data.Title,
-        description: '', // Will be provided by Gemini
-        matchReason: '', // Will be provided by Gemini
-        streamingPlatforms: [] // Will be provided by Gemini
-      }
-    } else {
-      console.error('OMDB API: Movie not found or no poster:', data.Error)
-      return null
+    const data = await response.json()
+    if (data.Error) {
+      throw new Error(`OMDB API error: ${data.Error}`)
+    }
+
+    return {
+      posterUrl: data.Poster !== 'N/A' ? data.Poster : '/movie-placeholder.jpg'
     }
   } catch (error) {
-    console.error(`OMDB API: Error fetching details for ${title}:`, error)
-    return null
+    console.error('OMDB API error:', error)
+    throw error
   }
 } 
