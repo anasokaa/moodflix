@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button'
@@ -59,26 +59,18 @@ export default function MovieRevealPage() {
   const router = useRouter()
   const { t } = useLanguage()
 
-  // Memoize session data
-  const sessionData = useMemo(() => {
+  useEffect(() => {
+    // Only access sessionStorage on the client side
     const storedMovieData = sessionStorage.getItem('movieData')
     const storedEmotions = sessionStorage.getItem('emotions')
-    const storedPreviousMovies = sessionStorage.getItem('previousMovies')
     
-    return {
-      movieData: storedMovieData ? JSON.parse(storedMovieData) : null,
-      emotions: storedEmotions ? JSON.parse(storedEmotions) : null,
-      previousMovies: storedPreviousMovies ? JSON.parse(storedPreviousMovies) : []
-    }
-  }, [])
-
-  useEffect(() => {
-    if (!sessionData.movieData || !sessionData.emotions) {
+    if (!storedMovieData || !storedEmotions) {
       router.push('/')
       return
     }
-    setMovieData(sessionData.movieData)
-  }, [router, sessionData])
+
+    setMovieData(JSON.parse(storedMovieData))
+  }, [router])
 
   const handleGenerateMore = useCallback(async () => {
     if (isLoading) return
@@ -88,14 +80,22 @@ export default function MovieRevealPage() {
       setError(null)
 
       const selectedPlatforms = sessionStorage.getItem('selectedPlatforms')
+      const storedEmotions = sessionStorage.getItem('emotions')
+      const storedPreviousMovies = sessionStorage.getItem('previousMovies')
+
       const platforms = selectedPlatforms ? JSON.parse(selectedPlatforms) : []
-      const previousMovies = sessionData.previousMovies
+      const emotions = storedEmotions ? JSON.parse(storedEmotions) : null
+      const previousMovies = storedPreviousMovies ? JSON.parse(storedPreviousMovies) : []
+
+      if (!emotions) {
+        throw new Error('No emotion data found')
+      }
 
       const response = await fetch('/api/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          emotions: sessionData.emotions,
+          emotions,
           platforms,
           previousMovies
         })
@@ -119,7 +119,7 @@ export default function MovieRevealPage() {
     } finally {
       setIsLoading(false)
     }
-  }, [isLoading, sessionData, t])
+  }, [isLoading, t])
 
   if (!movieData) {
     return (
