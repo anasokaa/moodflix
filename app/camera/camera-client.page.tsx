@@ -8,6 +8,8 @@ import { useLanguage } from '@/lib/language-context'
 import { Sparkles, Stars, Wand2, Users } from 'lucide-react'
 import { SiteHeader } from '@/components/site-header'
 
+type EmotionKey = 'happy' | 'sad' | 'angry' | 'fearful' | 'disgusted' | 'surprised' | 'neutral'
+
 interface Movie {
   title: string
   description: string
@@ -16,15 +18,7 @@ interface Movie {
   streamingPlatforms: string[]
 }
 
-interface EmotionData {
-  anger: number
-  disgust: number
-  fear: number
-  happiness: number
-  neutral: number
-  sadness: number
-  surprise: number
-}
+interface EmotionData extends Record<EmotionKey, number> {}
 
 const TransitionAnimation = ({ isTransitioning }: { isTransitioning: boolean }) => {
   const particles = useMemo(() => {
