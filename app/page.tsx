@@ -11,7 +11,6 @@ export default function HomePage() {
   const { t } = useLanguage()
 
   const handleModeSelect = (mode: 'solo' | 'group') => {
-    // Store the selected mode in sessionStorage
     sessionStorage.setItem('viewingMode', mode)
     if (mode === 'solo') {
       router.push('/streaming-platforms')
@@ -30,10 +29,10 @@ export default function HomePage() {
         >
           <div className="space-y-4">
             <h1 className="text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-purple-600">
-              MoodFlix ✨
+              {t('common.title')} ✨
             </h1>
             <p className="text-xl text-muted-foreground">
-              Let's find the perfect movie for your mood!
+              {t('home.subtitle')}
             </p>
           </div>
 
@@ -78,8 +77,8 @@ export default function HomePage() {
             transition={{ delay: 0.5 }}
             className="text-center text-sm text-muted-foreground"
           >
-            <p>Our AI will analyze your mood and suggest the perfect movie!</p>
-            <p>Take a selfie and let the magic happen ✨</p>
+            <p>{t('home.ai_description')}</p>
+            <p>{t('home.selfie_description')}</p>
           </motion.div>
         </motion.div>
       </div>

@@ -145,7 +145,7 @@ export default function MovieRevealClient() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
           >
-            Your Perfect Movie Match! ✨
+            {t('movies.reveal_title')} ✨
           </motion.h1>
           {movieData.emotions && (
             <EmotionDisplay emotions={movieData.emotions} />

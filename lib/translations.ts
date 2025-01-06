@@ -13,6 +13,8 @@ export const translations = {
       subtitle: 'Let us find the perfect movie for your mood',
       solo: 'Just Me',
       group: 'With Others',
+      ai_description: 'Our AI will analyze your mood and suggest the perfect movie!',
+      selfie_description: 'Take a selfie and let the magic happen ✨'
     },
     camera: {
       title: 'Take a Selfie',
@@ -45,6 +47,7 @@ export const translations = {
       more: 'Show me another movie',
       match: 'Match Reason',
       available_on: 'Available on',
+      reveal_title: 'Your Perfect Movie Match!'
     },
     emotions: {
       happy: 'Happy',
@@ -54,6 +57,11 @@ export const translations = {
       disgusted: 'Disgusted',
       surprised: 'Surprised',
       neutral: 'Neutral',
+    },
+    share: {
+      title: 'Check out this movie!',
+      text: 'I found {{title}} on MoodFlix! {{description}}',
+      button: 'Share'
     },
   },
   fr: {
@@ -70,6 +78,8 @@ export const translations = {
       subtitle: 'Trouvons le film parfait pour votre humeur',
       solo: 'Juste Moi',
       group: 'Avec d\'Autres',
+      ai_description: 'Notre IA analysera votre humeur et suggérera le film parfait !',
+      selfie_description: 'Prenez un selfie et laissez la magie opérer ✨'
     },
     camera: {
       title: 'Prenez un Selfie',
@@ -102,6 +112,7 @@ export const translations = {
       more: 'Montrez-moi un autre film',
       match: 'Raison du Match',
       available_on: 'Disponible sur',
+      reveal_title: 'Votre Film Parfait !'
     },
     emotions: {
       happy: 'Heureux',
@@ -111,6 +122,11 @@ export const translations = {
       disgusted: 'Dégoûté',
       surprised: 'Surpris',
       neutral: 'Neutre',
+    },
+    share: {
+      title: 'Découvrez ce film !',
+      text: 'J\'ai trouvé {{title}} sur MoodFlix ! {{description}}',
+      button: 'Partager'
     },
   },
 } 

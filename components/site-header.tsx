@@ -3,8 +3,11 @@
 import Link from 'next/link'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import { motion } from 'framer-motion'
+import { useLanguage } from '@/lib/language-context'
 
 export function SiteHeader() {
+  const { t } = useLanguage()
+
   return (
     <header className="w-full py-4">
       <div className="container flex items-center justify-between max-w-4xl mx-auto">
@@ -15,7 +18,7 @@ export function SiteHeader() {
             animate={{ opacity: 1 }}
             transition={{ duration: 0.3 }}
           >
-            MoodFlix ✨
+            {t('common.title')} ✨
           </motion.h1>
         </Link>
         <LanguageSwitcher />

@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { motion, AnimatePresence } from "framer-motion"
 import { Heart, Share2, ExternalLink, Star, Info } from 'lucide-react'
+import { useLanguage } from '@/lib/language-context'
 
 interface EmotionData {
   anger: number
@@ -51,6 +52,8 @@ const platformUrls: Record<string, string> = {
 }
 
 export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: MovieSuggestionsProps) {
+  const { t } = useLanguage()
+  
   if (!movies || movies.length === 0) return null
 
   const movie = movies[0] // We only show one movie now
@@ -111,7 +114,7 @@ export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: Mo
 
                 {/* Streaming Platforms */}
                 <div className="space-y-2">
-                  <h4 className="text-sm font-medium">Available on:</h4>
+                  <h4 className="text-sm font-medium">{t('movies.available_on')}:</h4>
                   <div className="flex flex-wrap gap-2">
                     {movie.streamingPlatforms.map((platform) => (
                       <a
@@ -122,7 +125,7 @@ export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: Mo
                         className="inline-flex items-center gap-1 px-3 py-1 text-sm bg-primary/10 hover:bg-primary/20 rounded-full transition-colors"
                       >
                         <span>{platformEmojis[platform]}</span>
-                        {platform}
+                        {t(`streaming.${platform.toLowerCase().replace(' ', '_')}`)}
                         <ExternalLink className="w-3 h-3 ml-1" />
                       </a>
                     ))}
@@ -134,8 +137,8 @@ export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: Mo
                   onClick={() => {
                     if (navigator.share) {
                       navigator.share({
-                        title: 'Check out this movie!',
-                        text: `I found ${movie.title} on MoodFlix! ${movie.description}`,
+                        title: t('share.title'),
+                        text: t('share.text', { title: movie.title, description: movie.description }),
                         url: window.location.href
                       })
                     }
@@ -143,7 +146,7 @@ export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: Mo
                   className="inline-flex items-center gap-2 px-4 py-2 text-sm bg-primary/10 hover:bg-primary/20 rounded-full transition-colors"
                 >
                   <Share2 className="w-4 h-4" />
-                  Share
+                  {t('share.button')}
                 </button>
               </div>
             </div>
@@ -157,7 +160,7 @@ export function MovieSuggestions({ movies, emotions, error, onGenerateMore }: Mo
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
       >
-        Show Me Another Movie
+        {t('movies.more')}
       </motion.button>
     </div>
   )
